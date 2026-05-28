@@ -1234,15 +1234,13 @@ pointer-events:none;
   }
 
   // objectWrap の stage-surface 座標系での実際の矩形を返す
+  // ※ DOM layoutに依存せず state の値を直接使う（大きいオブジェクトでのスクロールズレを防ぐ）
   function getObjectSurfaceRect() {
-    const wrapRect = objectWrap.getBoundingClientRect();
-    const surfaceRect = document.getElementById('stageSurface').getBoundingClientRect();
-    const zoom = state.zoom;
     return {
-      x: (wrapRect.left - surfaceRect.left) / zoom,
-      y: (wrapRect.top  - surfaceRect.top)  / zoom,
-      w: wrapRect.width  / zoom,
-      h: wrapRect.height / zoom,
+      x: state.objectX,
+      y: state.objectY,
+      w: state.objectW,
+      h: state.objectH,
     };
   }
 
@@ -1390,14 +1388,19 @@ pointer-events:none;
     clearOverlay();
     updateSurfaceStatus();
 
+    // ── アニメ開始時点で座標・サイズを確定（DOM layoutに依存しない） ──
+    // getObjectSurfaceRect() は state の値を返すので、スクロール・zoom変化の影響を受けない
     const objRect = getObjectSurfaceRect();
-    const target = { x: objRect.x, y: objRect.y + objRect.h };
-    const totalPx = objRect.w;
+    const startX  = objRect.x;           // 固定：アニメ中に変わらない
+    const startY  = objRect.y;
+    const totalPx = objRect.w;           // 固定：アニメ中に変わらない
+    const objH    = objRect.h;
+    const target  = { x: startX, y: startY + objH };
 
-    // DOM 実幅から 1mm あたりのピクセル数を算出（ドラッグ後の位置に追従）
-    const pxPerMmReal = totalPx / state.lengthMm;
+    // 1mm あたりのピクセル数を state から確定（DOM依存なし）
+    const pxPerMmReal = state.objectW / state.lengthMm;
 
-    const yellowThickness = pxPerMmReal * 10;
+    const yellowThickness = Math.max(pxPerMmReal * 10, 60);
     const yellowY = target.y - yellowThickness;
     const yellowRect = svgEl('rect', {
       x: target.x,
@@ -1412,16 +1415,22 @@ pointer-events:none;
     speak('長さを数えてみよう');
     beep(560, 100, 'sine', 0.04);
 
-    await rectGrow(yellowRect, totalPx, 560);
+    // 黄色バーの伸長時間を長さに応じて調整（大きいオブジェクトでも適切な速さに）
+    const growDuration = Math.min(560, Math.max(300, totalPx * 0.18));
+    await rectGrow(yellowRect, totalPx, growDuration);
     if (myToken !== state.overlayToken) return;
+
+    // 黄色バー完了音
+    beep(660, 80, 'sine', 0.03);
 
     const yBase = target.y - 22;
     let currentX = target.x;
 
     if (state.measureMode === 'mmOnly') {
       for (let i = 0; i < state.lengthMm; i++) {
-        if (myToken !== state.overlayToken) return;
+        // ✅ tokenチェックは await の後に行う（awaitで中断した後に確認）
         await wait(90);
+        if (myToken !== state.overlayToken) return;
         const nextX = currentX + pxPerMmReal;
         appendSegment(measureOverlay, {
           startX: currentX,
@@ -1442,11 +1451,12 @@ pointer-events:none;
       beep(980, 100, 'triangle', 0.04);
     } else {
       const cmCount = Math.floor(state.lengthMm / 10);
-      const remMm = state.lengthMm % 10;
+      const remMm   = state.lengthMm % 10;
 
       for (let i = 0; i < cmCount; i++) {
-        if (myToken !== state.overlayToken) return;
+        // ✅ tokenチェックは await の後に行う
         await wait(240);
+        if (myToken !== state.overlayToken) return;
         const nextX = currentX + 10 * pxPerMmReal;
         appendSegment(measureOverlay, {
           startX: currentX,
@@ -1462,8 +1472,9 @@ pointer-events:none;
       }
 
       for (let i = 0; i < remMm; i++) {
-        if (myToken !== state.overlayToken) return;
+        // ✅ tokenチェックは await の後に行う
         await wait(170);
+        if (myToken !== state.overlayToken) return;
         const nextX = currentX + pxPerMmReal;
         appendSegment(measureOverlay, {
           startX: currentX,
