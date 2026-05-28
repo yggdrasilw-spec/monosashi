@@ -32,7 +32,7 @@
       height:100vh;
       padding:14px;
       display:grid;
-      grid-template-rows:auto minmax(420px,1fr) auto;
+      grid-template-rows:auto 1fr auto;
       gap:12px;
     }
     .topbar,.bottombar,.stage{
@@ -324,7 +324,29 @@
       z-index:22;
     }
 
-    .bottombar{padding:12px 14px}
+    .bottombar{padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+    #debugPanel{display:none;flex-wrap:wrap;gap:8px;align-items:center;width:100%;}
+    #debugPanel.visible{display:flex;}
+    #debugBtn{
+      font-size:11px;
+      padding:6px 10px;
+      background:#f1f5f9;
+      color:#64748b;
+      border:1px solid #cbd5e1;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:700;
+      flex-shrink:0;
+    }
+    #debugBtn.active{background:#fef3c7;color:#92400e;border-color:#fcd34d;}
+    .result{
+      font-size:22px;
+      font-weight:900;
+      line-height:1.4;
+      flex:1;
+    }
+    .result .cm{color:var(--cm);font-weight:900}
+    .result .mm{color:var(--mm);font-weight:900}
     .status-row{
       display:flex;
       justify-content:space-between;
@@ -348,14 +370,6 @@
       font-weight:700;
     }
     .pill b{font-size:15px}
-    .result{
-      margin-top:8px;
-      min-height:1.8em;
-      font-size:18px;
-      line-height:1.55;
-    }
-    .result .cm{color:var(--cm);font-weight:900}
-    .result .mm{color:var(--mm);font-weight:900}
     .footer-note{
       margin-top:8px;
       display:flex;
@@ -468,19 +482,15 @@ pointer-events:none;
     </div>
 
     <div class="bottombar">
-      <div class="status-row">
-        <div class="status-left">
-          <div class="pill">対象：<b id="objectText">消しゴム</b></div>
-          <div class="pill">対象の長さ：<b id="lengthText">4cm 0mm</b></div>
-          <div class="pill">物差しの位置：<b id="snapText">未スナップ</b></div>
-          <div class="pill">状態：<b id="modeText">待機中</b></div>
-        </div>
-        <div class="small">ドラッグで移動 → 対象物の左下に近づくと吸い付きます。拡大縮小しても各レイアウトは崩れません。</div>
-      </div>
+      <button id="debugBtn">🔧 DEBUG</button>
       <div class="result" id="resultText"></div>
-      <div class="footer-note">
-        <div>5cmの黒点、10cmの赤点・4重円弧、0の区切り線、mm着色を精密に描画しています。</div>
-        <div>鉛筆と消しゴムを切り替えながら、mm単位まで読む練習ができます。</div>
+      <div id="debugPanel">
+        <div class="pill">対象：<b id="objectText">消しゴム</b></div>
+        <div class="pill">対象の長さ：<b id="lengthText">4cm 0mm</b></div>
+        <div class="pill">物差しの位置：<b id="snapText">未スナップ</b></div>
+        <div class="pill">状態：<b id="modeText">待機中</b></div>
+        <div class="pill" style="color:var(--muted);font-size:12px;">ドラッグで移動 → 対象物の左下に近づくと吸い付きます</div>
+        <div class="pill" style="color:var(--muted);font-size:12px;">5cmの黒点、10cmの赤点・4重円弧、0の区切り線、mm着色を精密に描画</div>
       </div>
     </div>
   </div>
@@ -1648,6 +1658,17 @@ pointer-events:none;
         loadFolderBtn.textContent = '📁 PNGフォルダ読み込み';
         showToast('読み込みをキャンセルしました。または対応していないブラウザです。', 2400);
       }
+    });
+  }
+
+  // デバッグパネルのトグル
+  const debugBtn = document.getElementById('debugBtn');
+  const debugPanel = document.getElementById('debugPanel');
+  if (debugBtn && debugPanel) {
+    debugBtn.addEventListener('click', () => {
+      const on = debugPanel.classList.toggle('visible');
+      debugBtn.classList.toggle('active', on);
+      debugBtn.textContent = on ? '🔧 DEBUG ON' : '🔧 DEBUG';
     });
   }
 
