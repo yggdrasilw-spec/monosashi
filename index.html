@@ -265,13 +265,19 @@
       position:absolute;
       left:220px;
       top:540px;
-      width:5100px;
-      height:303px;
       cursor:grab;
       touch-action:none;
       user-select:none;
       z-index:15;
       will-change:transform,left,top;
+    }
+    .ruler-wrap.bamboo{
+      width:5100px;
+      height:303px;
+    }
+    .ruler-wrap.plastic{
+      width:5304px;  /* 102px(左余白) + 300mm*17px + 102px(右余白) */
+      height:240px;
     }
     .ruler-wrap.dragging{cursor:grabbing}
     .ruler-svg{
@@ -279,6 +285,10 @@
       height:100%;
       display:block;
       filter:drop-shadow(0 10px 18px rgba(15,23,42,.12));
+    }
+    button.ruler-toggle-active{
+      background:#6d28d9;
+      color:#fff;
     }
 
     .hint-badge,.toast{
@@ -412,6 +422,7 @@
         <button id="zoomInBtn">＋</button>
         <button id="zoomResetBtn">標準</button>
         <button id="modeBtn" class="ghost">通常測定モード</button>
+        <button id="rulerTypeBtn" class="ghost">🎋 竹ものさし</button>
         <button id="measureBtn" class="primary">測るアニメ開始</button>
         
 <button id="imageLoadBtn">画像を読み込む</button>
@@ -433,7 +444,9 @@
             <div id="objectBody"></div>
           </div>
 
-          <div class="ruler-wrap" id="rulerWrap" aria-label="竹物差し">
+          <div class="ruler-wrap bamboo" id="rulerWrap" aria-label="物差し">
+
+            <!-- 竹ものさし -->
             <svg id="rulerSvg" class="ruler-svg" viewBox="0 0 5100 303" shape-rendering="geometricPrecision" preserveAspectRatio="none">
               <defs>
                 <clipPath id="rulerClip">
@@ -454,6 +467,45 @@
               <g id="fiveCmDots"></g>
               <g id="tenCmMarkers" stroke="#2b1d18" stroke-width="2.4" stroke-linecap="round" fill="none"></g>
             </svg>
+
+            <!-- プラスチックものさし (1mm=17px, 左余白102px=6mm, 右余白102px) -->
+            <!-- 全幅: 102 + 300*17 + 102 = 5304px, 高さ240px -->
+            <svg id="plasticRulerSvg" class="ruler-svg" style="display:none;"
+              viewBox="0 0 5304 240"
+              shape-rendering="geometricPrecision" preserveAspectRatio="none">
+              <defs>
+                <clipPath id="plasticRulerClip">
+                  <rect x="0" y="0" width="5304" height="240" rx="12" ry="12"/>
+                </clipPath>
+                <linearGradient id="plasticGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%"   stop-color="#e8f4fb"/>
+                  <stop offset="18%"  stop-color="#d0eaf7"/>
+                  <stop offset="50%"  stop-color="#c2e0f5"/>
+                  <stop offset="82%"  stop-color="#b8d8f0"/>
+                  <stop offset="100%" stop-color="#a8ccec"/>
+                </linearGradient>
+                <linearGradient id="plasticShine" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%"   stop-color="rgba(255,255,255,0.62)"/>
+                  <stop offset="35%"  stop-color="rgba(255,255,255,0.18)"/>
+                  <stop offset="100%" stop-color="rgba(255,255,255,0.04)"/>
+                </linearGradient>
+              </defs>
+              <!-- 本体 -->
+              <rect x="0" y="0" width="5304" height="240" rx="12" ry="12" fill="url(#plasticGrad)" stroke="#5a9ac8" stroke-width="3"/>
+              <!-- 光沢ハイライト -->
+              <rect x="0" y="0" width="5304" height="80" rx="12" ry="0" fill="url(#plasticShine)" clip-path="url(#plasticRulerClip)"/>
+              <!-- 下辺エッジライン -->
+              <line x1="0" y1="237" x2="5304" y2="237" stroke="#4a8aba" stroke-width="2.5"/>
+              <!-- 0の位置を示す縦線（左余白の右端 x=102） -->
+              <line x1="102" y1="0" x2="102" y2="240" stroke="#1a5276" stroke-width="3.5"/>
+              <!-- 目盛り群 -->
+              <g id="plasticHintLayer" clip-path="url(#plasticRulerClip)"></g>
+              <g id="plasticMmTicks" stroke-linecap="square"></g>
+              <g id="plasticHalfCmTicks" stroke="#1a5276" stroke-width="2.8" stroke-linecap="square"></g>
+              <g id="plasticCmTicks" stroke="#1a5276" stroke-width="3.2" stroke-linecap="square"></g>
+              <g id="plasticCmLabels" fill="#0d3349" font-family="system-ui,-apple-system,sans-serif" font-weight="800"></g>
+            </svg>
+
           </div>
 
           <svg id="measureOverlay" class="overlay" viewBox="0 0 6500 1400" preserveAspectRatio="none"></svg>
@@ -498,9 +550,12 @@ pointer-events:none;
   
 <script>
 (() => {
-  const PX_PER_MM = 17;
+  const PX_PER_MM = 17;          // 1mm=17px（竹・プラ共通）
+  const PX_PER_MM_PLASTIC = 17;  // プラスチックものさし: 竹と同じ17px/mm
+  const PLASTIC_LEFT_OFFSET = 102; // プラ定規の左余白px (6mm×17px=102px)
   const RULER_MM = 300; // 30cm
   const RULER_HEIGHT = 303;
+  const PLASTIC_RULER_HEIGHT = 240;
   const CANVAS_W = 6500;
   const CANVAS_H_BASE = 1400;  // 最小キャンバス高さ
   let CANVAS_H = CANVAS_H_BASE;
@@ -538,6 +593,13 @@ pointer-events:none;
   const cmTicks = document.getElementById('cmTicks');
   const fiveCmDots = document.getElementById('fiveCmDots');
   const tenCmMarkers = document.getElementById('tenCmMarkers');
+  const plasticRulerSvg = document.getElementById('plasticRulerSvg');
+  const plasticHintLayer = document.getElementById('plasticHintLayer');
+  const plasticMmTicks = document.getElementById('plasticMmTicks');
+  const plasticHalfCmTicks = document.getElementById('plasticHalfCmTicks');
+  const plasticCmTicks = document.getElementById('plasticCmTicks');
+  const plasticCmLabels = document.getElementById('plasticCmLabels');
+  const rulerTypeBtn = document.getElementById('rulerTypeBtn');
 
   const colorCycle = ['#f8b4d9','#bfdbfe','#bbf7d0','#fde68a','#ffffff'];
   const objectKinds = [
@@ -707,7 +769,8 @@ pointer-events:none;
     objectDragStartLeft: 0,
     objectDragStartTop: 0,
     customImageFit: null,
-    customImageVisual: null
+    customImageVisual: null,
+    rulerType: 'bamboo',   // 'bamboo' | 'plastic'
   };
 
   const audio = {
@@ -936,8 +999,9 @@ pointer-events:none;
 
   // オブジェクトサイズに合わせてキャンバス高さとoverlayのviewBoxを動的に更新
   function updateCanvasSize() {
-    // オブジェクト下端 + 物差し(303px) + 余白200px が収まるように
-    const needed = state.objectY + state.objectH + RULER_HEIGHT + 200;
+    // オブジェクト下端 + 物差し高さ + 余白200px が収まるように
+    const rulerH = state.rulerType === 'plastic' ? PLASTIC_RULER_HEIGHT : RULER_HEIGHT;
+    const needed = state.objectY + state.objectH + rulerH + 200;
     CANVAS_H = Math.max(CANVAS_H_BASE, needed);
 
     // stage-surface と stageSpacer の高さを更新
@@ -1030,7 +1094,68 @@ pointer-events:none;
 
   function applyHintToggle() {
     hintLayer.style.display = hintToggle.checked ? 'inline' : 'none';
+    plasticHintLayer.style.display = hintToggle.checked ? 'inline' : 'none';
   }
+
+  // ── プラスチックものさし SVG 構築 ──────────────────
+  // 1mm = 17px  左余白 PLASTIC_LEFT_OFFSET=102px  高さ240px
+  // 目盛りは上辺（y=0）から下向きに伸びる
+  // mm目盛り: 長さ28px, 5mm: 40px, cm: 66px
+  // 数字ラベルは cm目盛りの下に配置(y=108)
+  // ヒント着色帯は目盛り先端エリア
+  function buildPlasticRulerSvg() {
+    const OFF = PLASTIC_LEFT_OFFSET; // 102 (6mm×17px)
+    const P = PX_PER_MM_PLASTIC;     // 17
+    const TOTAL_MM = RULER_MM;       // 300
+
+    // ── ヒント着色帯 ──
+    let hintHtml = '';
+    for (let mm = 0; mm < TOTAL_MM; mm++) {
+      const x = OFF + mm * P;
+      const fill = mmColor(mm);
+      hintHtml += `<rect x="${x}" y="0" width="${P - 2}" height="58" fill="${fill}" opacity="1"/>`;
+    }
+    plasticHintLayer.innerHTML = hintHtml;
+
+    // ── mm目盛り（1mm刻み、cm/5mm以外）──
+    let mmHtml = '';
+    for (let mm = 1; mm <= TOTAL_MM; mm++) {
+      const isCm = mm % 10 === 0;
+      const isHalfCm = mm % 5 === 0 && !isCm;
+      if (isCm || isHalfCm) continue;
+      const x = OFF + mm * P;
+      mmHtml += `<line x1="${x}" y1="0" x2="${x}" y2="28" stroke="#1a5276" stroke-width="2.0" stroke-linecap="square"/>`;
+    }
+    plasticMmTicks.innerHTML = mmHtml;
+
+    // ── 5mm目盛り ──
+    let halfHtml = '';
+    for (let mm = 5; mm < TOTAL_MM; mm += 10) {
+      const x = OFF + mm * P;
+      halfHtml += `<line x1="${x}" y1="0" x2="${x}" y2="40" stroke-width="2.4" stroke-linecap="square"/>`;
+    }
+    plasticHalfCmTicks.innerHTML = halfHtml;
+
+    // ── cm目盛り（0cmはOFF位置の縦線で既に描画済みなのでスキップ） ──
+    let cmHtml = '';
+    for (let mm = 10; mm <= TOTAL_MM; mm += 10) {
+      const x = OFF + mm * P;
+      cmHtml += `<line x1="${x}" y1="0" x2="${x}" y2="66" stroke-width="3.5" stroke-linecap="square"/>`;
+    }
+    plasticCmTicks.innerHTML = cmHtml;
+
+    // ── cmラベル ──
+    let labelHtml = '';
+    for (let cm = 0; cm <= 30; cm++) {
+      const x = OFF + cm * 10 * P;
+      const fontSize = cm === 0 ? 36 : 40;
+      labelHtml += `<text x="${x}" y="108" text-anchor="middle" font-size="${fontSize}" font-weight="800">${cm}</text>`;
+    }
+    plasticCmLabels.innerHTML = labelHtml;
+
+    applyHintToggle();
+  }
+  // ── /プラスチックものさし ─────────────────────────
 
   function buildObjectSvg(type, lengthMm) {
     const lengthPx = lengthMm * PX_PER_MM;
@@ -1210,6 +1335,7 @@ pointer-events:none;
     }
 
     const objectH = state.objectH;
+    const rulerH = state.rulerType === 'plastic' ? PLASTIC_RULER_HEIGHT : RULER_HEIGHT;
     if (randomizePosition) {
       state.objectX = 650 + Math.floor(Math.random() * 230);
       state.objectY = type === 'button' ? 250 : (type === 'pencil' ? 240 : (type === 'image' ? 220 : 170));
@@ -1234,6 +1360,7 @@ pointer-events:none;
 
     state.rulerLeft = 220;
     state.rulerTop = state.objectY + objectH + 120;
+    applyRulerType(); // サイズクラスも更新
     updateRulerPosition();
     updateCanvasSize();   // ← キャンバス高さとviewBoxをオブジェクトサイズに合わせて更新
     updateSurfaceStatus();
@@ -1251,6 +1378,23 @@ pointer-events:none;
     rulerWrap.style.top = `${state.rulerTop}px`;
   }
 
+  function applyRulerType() {
+    const isBamboo = state.rulerType === 'bamboo';
+    rulerWrap.classList.toggle('bamboo', isBamboo);
+    rulerWrap.classList.toggle('plastic', !isBamboo);
+    document.getElementById('rulerSvg').style.display = isBamboo ? '' : 'none';
+    plasticRulerSvg.style.display = isBamboo ? 'none' : '';
+    rulerTypeBtn.textContent = isBamboo ? '🎋 竹ものさし' : '📏 プラものさし';
+    rulerTypeBtn.classList.toggle('ruler-toggle-active', !isBamboo);
+    // floating-note更新
+    const note = document.querySelector('.floating-note');
+    if (note) {
+      note.textContent = isBamboo
+        ? '※物差しは 1mm = 17px の高精度設計です。拡大縮小しても目盛り位置は崩れません。'
+        : '※プラスチックものさしは 1mm = 17px 設計です。0の目盛りが左端から6mm内側にあります。';
+    }
+  }
+
   // objectWrap の stage-surface 座標系での実際の矩形を返す
   // ※ DOM layoutに依存せず state の値を直接使う（大きいオブジェクトでのスクロールズレを防ぐ）
   function getObjectSurfaceRect() {
@@ -1264,6 +1408,12 @@ pointer-events:none;
 
   function snapTarget() {
     const r = getObjectSurfaceRect();
+    // プラ定規はSVG左端から PLASTIC_LEFT_OFFSET px が 0mm
+    // rulerLeft は SVG左端の座標なので、0mm をオブジェクト左端に合わせるには
+    // rulerLeft + PLASTIC_LEFT_OFFSET == objectX  →  rulerLeft = objectX - PLASTIC_LEFT_OFFSET
+    if (state.rulerType === 'plastic') {
+      return { x: r.x - PLASTIC_LEFT_OFFSET, y: r.y + r.h };
+    }
     return { x: r.x, y: r.y + r.h };
   }
 
@@ -1411,12 +1561,13 @@ pointer-events:none;
     const objRect = getObjectSurfaceRect();
     const startX  = objRect.x;           // 固定：アニメ中に変わらない
     const startY  = objRect.y;
-    const totalPx = objRect.w;           // 固定：アニメ中に変わらない
+    // プラ定規は pxPerMm が異なるため totalPx も再計算
+    const pxPerMmReal = state.rulerType === 'plastic'
+      ? PX_PER_MM_PLASTIC
+      : state.objectW / state.lengthMm;
+    const totalPx = pxPerMmReal * state.lengthMm;
     const objH    = objRect.h;
     const target  = { x: startX, y: startY + objH };
-
-    // 1mm あたりのピクセル数を state から確定（DOM依存なし）
-    const pxPerMmReal = state.objectW / state.lengthMm;
 
     const yellowThickness = Math.max(pxPerMmReal * 10, 60);
     const yellowY = target.y - yellowThickness;
@@ -1759,7 +1910,10 @@ pointer-events:none;
       trySnap(false);
     }
     if (!state.snapped) {
-      showToast('先に物差しの左はし（0）を、対象物の左下に合わせてね', 2200);
+      const msg = state.rulerType === 'plastic'
+        ? '先に物差しの「0」の目盛りを、対象物の左下に合わせてね'
+        : '先に物差しの左はし（0）を、対象物の左下に合わせてね';
+      showToast(msg, 2200);
       speak('先に端とゼロを合わせよう');
       return;
     }
@@ -1789,7 +1943,27 @@ pointer-events:none;
 
   updateZoomUI();
   buildRulerSvg();
+  buildPlasticRulerSvg();
+  applyRulerType();
   if (typeof refreshSoundButton === 'function') refreshSoundButton();
+
+  if (rulerTypeBtn) {
+    rulerTypeBtn.addEventListener('click', () => {
+      state.rulerType = state.rulerType === 'bamboo' ? 'plastic' : 'bamboo';
+      applyRulerType();
+      // スナップ解除してリセット
+      state.snapped = false;
+      state.snapLocked = false;
+      state.snapSuspended = false;
+      clearOverlay();
+      updateSurfaceStatus();
+      // 定規位置はそのまま（ユーザーが再調整できる）
+      const msg = state.rulerType === 'plastic'
+        ? '📏 プラスチックものさしに切り替えました。0の目盛りを対象物の左下に合わせてね。'
+        : '🎋 竹ものさしに切り替えました。左端の0を対象物の左下に合わせてね。';
+      showToast(msg, 2600);
+    });
+  }
 
   // 起動時：直書きPNGを自動fetch → その後ID1からスタート
   currentProblemIndex = 0;
