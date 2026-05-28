@@ -544,11 +544,29 @@ pointer-events:none;
   ];
 
   // 同フォルダPNG管理
-  let pngFileList    = [];   // { name, src } の配列（ファイル名順）
-  let pngLoadedCount = 0;    // 読み込み済み数
-  let currentProblemIndex = 0;  // 0始まり（ID1=index0）
+  const PNG_NAMES = ['candy','ika','kani','kutu1','kutu2','kabuto','sakana','kuwa','tombo'];
+  let pngFileList = [];          // { name, src, ratio } の配列
+  let currentProblemIndex = 0;   // 0始まり（ID1=index0）
 
-  // File System Access API でフォルダ内PNGを取得
+  // 起動時：直書きPNGをfetchで自動読み込み
+  async function preloadBuiltinPngs() {
+    const results = await Promise.allSettled(
+      PNG_NAMES.map(async name => {
+        const res = await fetch(`./${name}.png`);
+        if (!res.ok) throw new Error(`404: ${name}.png`);
+        const blob = await res.blob();
+        const file = new File([blob], `${name}.png`, { type: 'image/png' });
+        const processed = await preprocessImageFile(file);
+        return { name, src: processed.src, ratio: processed.ratio };
+      })
+    );
+    pngFileList = results
+      .filter(r => r.status === 'fulfilled')
+      .map(r => r.value);
+    return pngFileList.length;
+  }
+
+  // フォルダ選択でPNGを追加読み込み（直書き分に追記）
   async function loadFolderPngs() {
     if (!('showDirectoryPicker' in window)) return false;
     try {
@@ -567,10 +585,10 @@ pointer-events:none;
           const file = await handle.getFile();
           const processed = await preprocessImageFile(file);
           loaded.push({ name, src: processed.src, ratio: processed.ratio });
-        } catch (_) { /* 読み込み失敗はスキップ */ }
+        } catch (_) {}
       }
+      // 既存リストを置き換え（フォルダ選択で上書き）
       pngFileList = loaded;
-      pngLoadedCount = loaded.length;
       return true;
     } catch (_) {
       return false;
@@ -1722,14 +1740,20 @@ pointer-events:none;
   buildRulerSvg();
   if (typeof refreshSoundButton === 'function') refreshSoundButton();
 
-  // 起動時：問題ID1（消しゴム 4cm）からスタート
+  // 起動時：直書きPNGを自動fetch → その後ID1からスタート
   currentProblemIndex = 0;
   updateProblemIdBadge(1);
   setProblem('eraser', 40, false, '消しゴム');
-
   updateRulerPosition();
   updateSurfaceStatus();
-  showToast('「次の問題」で問題ID順に進みます。PNGをフォルダから読み込むと問題ID4以降に追加されます。', 3000);
+
+  preloadBuiltinPngs().then(count => {
+    if (count > 0) {
+      showToast(`✅ PNG ${count}枚を読み込みました。問題ID4〜${maxProblemId()}に追加されました。`, 3000);
+    } else {
+      showToast('「次の問題」で問題ID順に進みます。', 2200);
+    }
+  });
 })();
 </script>
 
