@@ -502,7 +502,8 @@ pointer-events:none;
   const RULER_MM = 300; // 30cm
   const RULER_HEIGHT = 303;
   const CANVAS_W = 6500;
-  const CANVAS_H = 1400;
+  const CANVAS_H_BASE = 1400;  // 最小キャンバス高さ
+  let CANVAS_H = CANVAS_H_BASE;
 
   const stage = document.getElementById('stage');
   const stageSpacer = document.getElementById('stageSpacer');
@@ -933,6 +934,22 @@ pointer-events:none;
     zoomText.textContent = `拡大 ${Math.round(state.zoom * 100)}%`;
   }
 
+  // オブジェクトサイズに合わせてキャンバス高さとoverlayのviewBoxを動的に更新
+  function updateCanvasSize() {
+    // オブジェクト下端 + 物差し(303px) + 余白200px が収まるように
+    const needed = state.objectY + state.objectH + RULER_HEIGHT + 200;
+    CANVAS_H = Math.max(CANVAS_H_BASE, needed);
+
+    // stage-surface と stageSpacer の高さを更新
+    const stageSurface = document.getElementById('stageSurface');
+    stageSurface.style.height = `${CANVAS_H}px`;
+    stageSurface.style.setProperty('--canvas-h', `${CANVAS_H}px`);
+    stageSpacer.style.height = `${CANVAS_H * state.zoom}px`;
+
+    // measureOverlay の viewBox を更新（SVG座標系をキャンバスに合わせる）
+    measureOverlay.setAttribute('viewBox', `0 0 ${CANVAS_W} ${CANVAS_H}`);
+  }
+
   function updateSurfaceStatus() {
     objectText.textContent = state._customLabel || formatObjectLabel(state.objectType);
     lengthText.textContent = fmtLength(state.lengthMm);
@@ -1218,6 +1235,7 @@ pointer-events:none;
     state.rulerLeft = 220;
     state.rulerTop = state.objectY + objectH + 120;
     updateRulerPosition();
+    updateCanvasSize();   // ← キャンバス高さとviewBoxをオブジェクトサイズに合わせて更新
     updateSurfaceStatus();
     clearOverlay();
     // showToastはapplyProblemByIdで上書きするのでここでは最小限に
@@ -1616,6 +1634,7 @@ pointer-events:none;
     const clamped = Math.max(0.14, Math.min(0.5, nextZoom));
     state.zoom = Math.round(clamped * 100) / 100;
     updateZoomUI();
+    updateCanvasSize();
     updateSurfaceStatus();
   }
 
@@ -1775,7 +1794,7 @@ pointer-events:none;
   // 起動時：直書きPNGを自動fetch → その後ID1からスタート
   currentProblemIndex = 0;
   updateProblemIdBadge(1);
-  setProblem('eraser', 40, false, '消しゴム');
+  setProblem('eraser', 40, false, '消しゴム');  // ← setProblem内でupdateCanvasSizeが呼ばれる
   updateRulerPosition();
   updateSurfaceStatus();
 
