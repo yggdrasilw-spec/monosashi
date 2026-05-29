@@ -290,6 +290,33 @@
       background:#6d28d9;
       color:#fff;
     }
+    /* 答え合わせボタン */
+    #answerBtn{
+      display:none;
+      background:linear-gradient(135deg,#f59e0b,#ef4444);
+      color:#fff;
+      font-weight:900;
+      font-size:15px;
+      border:none;
+      border-radius:999px;
+      padding:8px 22px;
+      cursor:pointer;
+      box-shadow:0 2px 12px rgba(239,68,68,.35);
+      position:relative;
+      overflow:visible;
+    }
+    #answerBtn.visible{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    @keyframes answerPulse{
+      0%,100%{transform:scale(1);box-shadow:0 2px 12px rgba(239,68,68,.35);}
+      50%{transform:scale(1.12);box-shadow:0 4px 24px rgba(239,68,68,.75),0 0 0 6px rgba(245,158,11,.25);}
+    }
+    #answerBtn.pulsing{
+      animation:answerPulse 1.0s ease-in-out infinite;
+    }
 
     .hint-badge,.toast{
       position:absolute;
@@ -424,6 +451,7 @@
         <button id="modeBtn" class="ghost">通常測定モード</button>
         <button id="rulerTypeBtn" class="ghost">🎋 竹ものさし</button>
         <button id="measureBtn" class="primary">測るアニメ開始</button>
+        <button id="answerBtn">🔍 答え合わせ</button>
         
 <button id="imageLoadBtn">画像を読み込む</button>
 <input id="imageInput" type="file" accept="image/*" style="display:none">
@@ -561,6 +589,7 @@ pointer-events:none;
   let CANVAS_H = CANVAS_H_BASE;
 
   const stage = document.getElementById('stage');
+  const stageViewport = document.getElementById('stageViewport');
   const stageSpacer = document.getElementById('stageSpacer');
   const measureOverlay = document.getElementById('measureOverlay');
   const objectWrap = document.getElementById('objectWrap');
@@ -1441,8 +1470,15 @@ pointer-events:none;
     return false;
   }
 
+  // ── 答え合わせボタン待機用 Promise resolver ──
+  let _answerResolve = null;
+
   function clearOverlay() {
     measureOverlay.innerHTML = '';
+    // アニメが中断された時に答え合わせボタンを隠す
+    const ab = document.getElementById('answerBtn');
+    if (ab) { ab.classList.remove('visible', 'pulsing'); }
+    _answerResolve = null;
   }
 
   function svgEl(tag, attrs = {}) {
@@ -1557,11 +1593,9 @@ pointer-events:none;
     updateSurfaceStatus();
 
     // ── アニメ開始時点で座標・サイズを確定（DOM layoutに依存しない） ──
-    // getObjectSurfaceRect() は state の値を返すので、スクロール・zoom変化の影響を受けない
     const objRect = getObjectSurfaceRect();
-    const startX  = objRect.x;           // 固定：アニメ中に変わらない
+    const startX  = objRect.x;
     const startY  = objRect.y;
-    // プラ定規は pxPerMm が異なるため totalPx も再計算
     const pxPerMmReal = state.rulerType === 'plastic'
       ? PX_PER_MM_PLASTIC
       : state.objectW / state.lengthMm;
@@ -1584,20 +1618,71 @@ pointer-events:none;
     speak('長さを数えてみよう');
     beep(560, 100, 'sine', 0.04);
 
-    // 黄色バーの伸長時間を長さに応じて調整（大きいオブジェクトでも適切な速さに）
     const growDuration = Math.min(560, Math.max(300, totalPx * 0.18));
     await rectGrow(yellowRect, totalPx, growDuration);
     if (myToken !== state.overlayToken) return;
 
-    // 黄色バー完了音
     beep(660, 80, 'sine', 0.03);
+
+    // ══════════════════════════════════════════════════
+    // ① 黄色バー完了 → 自動ズームして目盛りを読む時間
+    // ══════════════════════════════════════════════════
+
+    // ルーラーの高さを取得
+    const rulerH = state.rulerType === 'plastic' ? PLASTIC_RULER_HEIGHT : RULER_HEIGHT;
+
+    // 対象領域: 黄色バーの左端〜右端、オブジェクト上端〜ルーラー下端
+    const regionLeft   = startX;
+    const regionRight  = startX + totalPx;
+    const regionTop    = startY;                               // オブジェクト上端
+    const regionBottom = target.y + rulerH;                   // ルーラー下端
+
+    const regionW = regionRight - regionLeft;
+    const regionH = regionBottom - regionTop;
+
+    // ビューポートサイズ（ヘッダー分除く）
+    const viewport = stageViewport;
+    const vpW = viewport.clientWidth;
+    const vpH = viewport.clientHeight;
+
+    // 余白を持たせた最大ズーム計算（領域が画面の85%に収まるように）
+    const MARGIN = 0.82;
+    const zoomFit = Math.min(vpW / regionW, vpH / regionH) * MARGIN;
+    const zoomTarget = Math.max(0.14, Math.min(0.5, zoomFit));
+
+    // 現在ズーム保存
+    const zoomBefore = state.zoom;
+
+    // ── ズームをアニメーション付きで変更 ──
+    await animateZoom(zoomBefore, zoomTarget, 480);
+    if (myToken !== state.overlayToken) return;
+
+    // ズーム後にセンタリングスクロール
+    // 領域中心がビューポート中央に来るように
+    const cx = (regionLeft + regionRight) / 2 * state.zoom;
+    const cy = (regionTop + regionBottom) / 2 * state.zoom;
+    viewport.scrollLeft = Math.max(0, cx - vpW / 2);
+    viewport.scrollTop  = Math.max(0, cy - vpH / 2);
+
+    // ── 答え合わせボタンを表示してパルスさせる ──
+    showAnswerBtn();
+
+    // ここで一時停止。ボタンが押されるまで待つ
+    await waitForAnswer(myToken);
+    if (myToken !== state.overlayToken) return;
+
+    // ── 答え合わせボタンを非表示 ──
+    hideAnswerBtn();
+
+    // ══════════════════════════════════════════════════
+    // ② 残りのアニメ（円弧セグメント）
+    // ══════════════════════════════════════════════════
 
     const yBase = target.y - 22;
     let currentX = target.x;
 
     if (state.measureMode === 'mmOnly') {
       for (let i = 0; i < state.lengthMm; i++) {
-        // ✅ tokenチェックは await の後に行う（awaitで中断した後に確認）
         await wait(90);
         if (myToken !== state.overlayToken) return;
         const nextX = currentX + pxPerMmReal;
@@ -1623,7 +1708,6 @@ pointer-events:none;
       const remMm   = state.lengthMm % 10;
 
       for (let i = 0; i < cmCount; i++) {
-        // ✅ tokenチェックは await の後に行う
         await wait(240);
         if (myToken !== state.overlayToken) return;
         const nextX = currentX + 10 * pxPerMmReal;
@@ -1641,7 +1725,6 @@ pointer-events:none;
       }
 
       for (let i = 0; i < remMm; i++) {
-        // ✅ tokenチェックは await の後に行う
         await wait(170);
         if (myToken !== state.overlayToken) return;
         const nextX = currentX + pxPerMmReal;
@@ -1669,6 +1752,58 @@ pointer-events:none;
     state.measuring = false;
     updateSurfaceStatus();
   }
+
+  // ── ズームをなめらかにアニメーション ──
+  function animateZoom(from, to, duration) {
+    return new Promise(resolve => {
+      const start = performance.now();
+      function step(now) {
+        const t = Math.min(1, (now - start) / duration);
+        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // easeInOut
+        const z = from + (to - from) * ease;
+        state.zoom = Math.round(z * 1000) / 1000;
+        updateZoomUI();
+        updateCanvasSize();
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          state.zoom = to;
+          updateZoomUI();
+          updateCanvasSize();
+          resolve();
+        }
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  // ── 答え合わせボタン制御 ──
+  function showAnswerBtn() {
+    const ab = document.getElementById('answerBtn');
+    if (ab) ab.classList.add('visible', 'pulsing');
+  }
+
+  function hideAnswerBtn() {
+    const ab = document.getElementById('answerBtn');
+    if (ab) ab.classList.remove('visible', 'pulsing');
+  }
+
+  function waitForAnswer(token) {
+    return new Promise(resolve => {
+      _answerResolve = { resolve, token };
+    });
+  }
+
+  // ── 答え合わせボタン初期化 ──
+  const answerBtn = document.getElementById('answerBtn');
+  answerBtn.addEventListener('click', () => {
+    if (_answerResolve) {
+      const { resolve } = _answerResolve;
+      _answerResolve = null;
+      hideAnswerBtn();
+      resolve();
+    }
+  });
 
 
   function objectPointerDown(e) {
