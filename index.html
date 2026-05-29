@@ -317,6 +317,14 @@
     #answerBtn.pulsing{
       animation:answerPulse 1.0s ease-in-out infinite;
     }
+    /* 測るアニメ開始ボタン スナップ後パルス */
+    @keyframes measurePulse{
+      0%,100%{transform:scale(1);box-shadow:0 2px 10px rgba(37,99,235,.3);}
+      50%{transform:scale(1.13);box-shadow:0 4px 28px rgba(37,99,235,.75),0 0 0 7px rgba(37,99,235,.18);}
+    }
+    #measureBtn.snapped-pulse{
+      animation:measurePulse 0.95s ease-in-out infinite;
+    }
 
     .hint-badge,.toast{
       position:absolute;
@@ -450,6 +458,7 @@
         <button id="zoomResetBtn">標準</button>
         <button id="modeBtn" class="ghost">通常測定モード</button>
         <button id="rulerTypeBtn" class="ghost">🎋 竹ものさし</button>
+        <button id="readModeBtn" class="ghost">🔊 省略読み</button>
         <button id="measureBtn" class="primary">測るアニメ開始</button>
         <button id="answerBtn">🔍 答え合わせ</button>
         
@@ -800,6 +809,7 @@ pointer-events:none;
     customImageFit: null,
     customImageVisual: null,
     rulerType: 'bamboo',   // 'bamboo' | 'plastic'
+    readMode: 'formal',    // 'formal'=正式読み | 'short'=省略読み
   };
 
   const audio = {
@@ -978,6 +988,30 @@ pointer-events:none;
     showHint._t = setTimeout(() => hintBadge.classList.remove('show'), ms);
   }
 
+  // センチメートルに続く数の読み（1〜30、促音あり）
+  const CM_KANA = [
+    '','いっ','に','さん','よん','ご','ろく','なな','はっ','きゅう',
+    'じゅっ','じゅういっ','じゅうに','じゅうさん','じゅうよん','じゅうご',
+    'じゅうろく','じゅうなな','じゅうはっ','じゅうきゅう',
+    'にじゅっ','にじゅういっ','にじゅうに','にじゅうさん','にじゅうよん','にじゅうご',
+    'にじゅうろく','にじゅうなな','にじゅうはっ','にじゅうきゅう',
+    'さんじゅっ'
+  ];
+
+  // ミリメートルに続く数の読み（促音なし）
+  const ones_mm  = ['','いち','に','さん','よん','ご','ろく','なな','はち','きゅう'];
+  const tens_mm  = ['','じゅう','にじゅう','さんじゅう','よんじゅう','ごじゅう','ろくじゅう','ななじゅう','はちじゅう','きゅうじゅう'];
+  function numToKanaMm(n) {
+    if (n === 0) return 'ぜろ';
+    if (n >= 100) return 'ひゃく'; // 100mmのみ
+    const t = Math.floor(n / 10);
+    const o = n % 10;
+    let s = '';
+    if (t > 0) s += tens_mm[t];
+    if (o > 0) s += ones_mm[o];
+    return s;
+  }
+
   function speak(text) {
     if (!state.audioEnabled || !('speechSynthesis' in window)) return;
     const u = new SpeechSynthesisUtterance(text);
@@ -1048,6 +1082,8 @@ pointer-events:none;
     lengthText.textContent = fmtLength(state.lengthMm);
     snapText.textContent = state.snapped ? 'スナップ中' : '未スナップ';
     modeText.textContent = state.measuring ? '測定中' : (state.snapped ? '測定ボタンを押せます' : '待機中');
+    // スナップ中かつ未測定のときだけ measureBtn をパルス
+    measureBtn.classList.toggle('snapped-pulse', state.snapped && !state.measuring);
   }
 
   function setResult(html) {
@@ -1701,7 +1737,8 @@ pointer-events:none;
       await wait(180);
       if (myToken !== state.overlayToken) return;
       setResult(`<span class="mm">${state.lengthMm}mm</span> だね！`);
-      speak(`${state.lengthMm}ミリだね`);
+      const mmSuffix = state.readMode === 'short' ? 'みり' : 'みりめーとる';
+      speak(`${numToKanaMm(state.lengthMm)}${mmSuffix}だね`);
       beep(980, 100, 'triangle', 0.04);
     } else {
       const cmCount = Math.floor(state.lengthMm / 10);
@@ -1744,7 +1781,21 @@ pointer-events:none;
       await wait(220);
       if (myToken !== state.overlayToken) return;
       setResult(`<span class="cm">${Math.floor(state.lengthMm / 10)}cm</span> <span class="mm">${state.lengthMm % 10}mm</span>（${state.lengthMm}ミリメートル）だね！`);
-      speak(`${Math.floor(state.lengthMm / 10)}センチ${state.lengthMm % 10}ミリだね`);
+      const cm      = Math.floor(state.lengthMm / 10);
+      const remMm2  = state.lengthMm % 10;
+      const isShort = state.readMode === 'short';
+      const cmSuffix = isShort ? 'せんち' : 'せんちめーとる';
+      const mmSuffix2 = isShort ? 'みり' : 'みりめーとる';
+      let speakTxt;
+      if (isShort && cm === 0) {
+        // 省略読み かつ 0cm → cmパートごと省略
+        speakTxt = `${numToKanaMm(remMm2)}${mmSuffix2}だね`;
+      } else if (remMm2 === 0) {
+        speakTxt = `${CM_KANA[cm]}${cmSuffix}だね`;
+      } else {
+        speakTxt = `${CM_KANA[cm]}${cmSuffix}${numToKanaMm(remMm2)}${mmSuffix2}だね`;
+      }
+      speak(speakTxt);
       beep(980, 120, 'triangle', 0.05);
       beep(1240, 150, 'triangle', 0.05);
     }
@@ -2040,6 +2091,19 @@ pointer-events:none;
   zoomInBtn.addEventListener('click', () => changeZoom(state.zoom + 0.05));
   zoomResetBtn.addEventListener('click', () => changeZoom(0.2));
 
+  const readModeBtn = document.getElementById('readModeBtn');
+  if (readModeBtn) {
+    readModeBtn.addEventListener('click', () => {
+      state.readMode = state.readMode === 'formal' ? 'short' : 'formal';
+      const isShort = state.readMode === 'short';
+      readModeBtn.textContent = isShort ? '🔊 正式読み' : '🔊 省略読み';
+      readModeBtn.classList.toggle('ruler-toggle-active', isShort);
+      showToast(isShort
+        ? '省略読みに切り替えました（せんち・みり）'
+        : '正式読みに切り替えました（せんちめーとる・みりめーとる）', 2000);
+    });
+  }
+
   measureBtn.addEventListener('click', () => {
     if (!state.snapped) {
       trySnap(false);
@@ -2083,8 +2147,7 @@ pointer-events:none;
   if (typeof refreshSoundButton === 'function') refreshSoundButton();
 
   if (rulerTypeBtn) {
-    rulerTypeBtn.addEventListener('click', () => {
-      state.rulerType = state.rulerType === 'bamboo' ? 'plastic' : 'bamboo';
+    rulerTypeBtn.addEventListener('click', () => {      state.rulerType = state.rulerType === 'bamboo' ? 'plastic' : 'bamboo';
       applyRulerType();
       // スナップ解除してリセット
       state.snapped = false;
