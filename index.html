@@ -1684,7 +1684,7 @@ pointer-events:none;
     // 余白を持たせた最大ズーム計算（領域が画面の85%に収まるように）
     const MARGIN = 0.82;
     const zoomFit = Math.min(vpW / regionW, vpH / regionH) * MARGIN;
-    const zoomTarget = Math.max(0.14, Math.min(0.5, zoomFit));
+    const zoomTarget = Math.max(0.14, Math.min(1.2, zoomFit));
 
     // 現在ズーム保存
     const zoomBefore = state.zoom;
@@ -1968,7 +1968,7 @@ pointer-events:none;
   }
 
   function changeZoom(nextZoom) {
-    const clamped = Math.max(0.14, Math.min(0.5, nextZoom));
+    const clamped = Math.max(0.14, Math.min(1.2, nextZoom));
     state.zoom = Math.round(clamped * 100) / 100;
     updateZoomUI();
     updateCanvasSize();
