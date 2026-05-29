@@ -458,7 +458,7 @@
         <button id="zoomResetBtn">標準</button>
         <button id="modeBtn" class="ghost">通常測定モード</button>
         <button id="rulerTypeBtn" class="ghost">🎋 竹ものさし</button>
-        <button id="readModeBtn" class="ghost">🔊 省略読み</button>
+        <button id="readModeBtn" class="ghost">🔊 正式読み</button>
         <button id="measureBtn" class="primary">測るアニメ開始</button>
         <button id="answerBtn">🔍 答え合わせ</button>
         
@@ -1787,8 +1787,8 @@ pointer-events:none;
       const cmSuffix = isShort ? 'せんち' : 'せんちめーとる';
       const mmSuffix2 = isShort ? 'みり' : 'みりめーとる';
       let speakTxt;
-      if (isShort && cm === 0) {
-        // 省略読み かつ 0cm → cmパートごと省略
+      if (cm === 0) {
+        // 0cm（9mm以下）→ 正式・省略どちらもcmパートを読まない
         speakTxt = `${numToKanaMm(remMm2)}${mmSuffix2}だね`;
       } else if (remMm2 === 0) {
         speakTxt = `${CM_KANA[cm]}${cmSuffix}だね`;
@@ -2096,7 +2096,7 @@ pointer-events:none;
     readModeBtn.addEventListener('click', () => {
       state.readMode = state.readMode === 'formal' ? 'short' : 'formal';
       const isShort = state.readMode === 'short';
-      readModeBtn.textContent = isShort ? '🔊 正式読み' : '🔊 省略読み';
+      readModeBtn.textContent = isShort ? '🔊 省略読み' : '🔊 正式読み';
       readModeBtn.classList.toggle('ruler-toggle-active', isShort);
       showToast(isShort
         ? '省略読みに切り替えました（せんち・みり）'
