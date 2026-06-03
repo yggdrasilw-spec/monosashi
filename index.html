@@ -1003,7 +1003,19 @@ pointer-events:none;
   const tens_mm  = ['','じゅう','にじゅう','さんじゅう','よんじゅう','ごじゅう','ろくじゅう','ななじゅう','はちじゅう','きゅうじゅう'];
   function numToKanaMm(n) {
     if (n === 0) return 'ぜろ';
-    if (n >= 100) return 'ひゃく'; // 100mmのみ
+    if (n < 0) return 'ぜろ';
+    // 100以上（mmOnlyモードで100mm超の長さを読む場合）
+    if (n >= 100) {
+      const h = Math.floor(n / 100);
+      const rest = n % 100;
+      const hPart = h === 1 ? 'ひゃく' : (h === 2 ? 'にひゃく' : h === 3 ? 'さんびゃく' : `${tens_mm[Math.floor(h/10)]}${ones_mm[h%10]}ひゃく`);
+      const t = Math.floor(rest / 10);
+      const o = rest % 10;
+      let s = hPart;
+      if (t > 0) s += tens_mm[t];
+      if (o > 0) s += ones_mm[o];
+      return s;
+    }
     const t = Math.floor(n / 10);
     const o = n % 10;
     let s = '';
