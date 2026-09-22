@@ -15,6 +15,7 @@
       --good:#16a34a;
       --shadow:0 18px 50px rgba(15,23,42,.12);
       --zoom:0.2;
+      --stage-ui-inv:5;
       --canvas-w:6500px;
       --canvas-h:1400px;
     }
@@ -32,7 +33,7 @@
       height:100vh;
       padding:14px;
       display:grid;
-      grid-template-rows:auto 1fr auto;
+      grid-template-rows:auto auto 1fr auto;
       gap:12px;
     }
     .topbar,.bottombar,.stage{
@@ -58,6 +59,57 @@
       gap:8px;
       align-items:center;
       justify-content:flex-end;
+    }
+    .advanced-controls{position:relative;}
+
+    /* 設定メニューは他の教材枠より必ず前面に出す */
+    .topbar{
+      position:relative;
+      z-index:1000;
+      overflow:visible;
+    }
+    .advanced-controls{
+      position:relative;
+      z-index:1100;
+    }
+    .advanced-controls[open]{z-index:1200;}
+    .advanced-panel{
+      z-index:1300;
+      max-height:min(70vh,560px);
+      overflow-y:auto;
+      overscroll-behavior:contain;
+    }
+    .free-guide-bar{position:relative;z-index:100;}
+    .stage{z-index:1;}
+    .bottombar{position:relative;z-index:1;}
+    .advanced-controls > summary{
+      list-style:none;
+      cursor:pointer;
+      border-radius:999px;
+      padding:10px 14px;
+      font-size:14px;
+      font-weight:850;
+      background:#f1f5f9;
+      color:#475569;
+      user-select:none;
+    }
+    .advanced-controls > summary::-webkit-details-marker{display:none;}
+    .advanced-controls[open] > summary{background:#e2e8f0;color:#0f172a;}
+    .advanced-panel{
+      position:absolute;
+      right:0;
+      top:calc(100% + 8px);
+      z-index:80;
+      min-width:320px;
+      max-width:min(620px,90vw);
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      padding:12px;
+      background:rgba(255,255,255,.98);
+      border:1px solid #cbd5e1;
+      border-radius:16px;
+      box-shadow:0 18px 40px rgba(15,23,42,.18);
     }
     button,.switch,.pill{
       border:none;
@@ -102,6 +154,64 @@
     }
     .switch input{transform:scale(1.15)}
 
+    .free-guide-bar{
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 14px;
+      background:rgba(255,255,255,.94);
+      border:2px solid #bfdbfe;
+      border-radius:18px;
+      box-shadow:0 10px 28px rgba(37,99,235,.10);
+      min-height:62px;
+    }
+    .free-guide-bar.visible{display:flex;}
+    .free-guide-main{
+      min-width:0;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex:1;
+    }
+    .free-guide-step{
+      flex:0 0 auto;
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#2563eb;
+      color:#fff;
+      font-size:22px;
+      font-weight:950;
+      box-shadow:0 5px 14px rgba(37,99,235,.22);
+    }
+    .free-guide-copy{min-width:0;}
+    .free-guide-title{font-size:18px;font-weight:950;line-height:1.2;color:#0f172a;}
+    .free-guide-sub{font-size:13px;font-weight:750;color:#64748b;margin-top:3px;line-height:1.35;}
+    .free-image-scale-note{display:inline-block;margin-top:6px;padding:4px 9px;border-radius:999px;background:#fff7d6;border:1px solid #f6c453;color:#7c4a03;font-size:13px;font-weight:850;line-height:1.3;}
+    .free-guide-actions{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      gap:7px;
+    }
+    .free-guide-actions button{padding:8px 11px;font-size:13px;}
+    .alignment-overlay{z-index:14;pointer-events:none;}
+    @media (max-width:900px){
+      .free-guide-bar.visible{align-items:flex-start;flex-direction:column;}
+      .free-guide-actions{width:100%;justify-content:flex-start;}
+    }
+
+
+    .stage.measure-view-active{cursor:grab;}
+    .stage.measure-view-active.panning{cursor:grabbing;}
+    .stage.measure-view-active .object-wrap,
+    .stage.measure-view-active .ruler-wrap{cursor:grab;}
+
     .stage{
       position:relative;
       overflow:auto;
@@ -139,6 +249,7 @@
     }
 
     .floating-note{
+      display:none !important;
       position:absolute;
       right:18px;
       top:14px;
@@ -260,6 +371,43 @@
       object-fit:contain;
       display:block;
     }
+    .custom-image-rot-layer{
+      position:absolute;
+      transform-origin:center center;
+      will-change:transform;
+    }
+    .custom-image-rot-layer img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      pointer-events:none;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+    .free-measure-svg{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      overflow:visible;
+      pointer-events:none;
+    }
+    .free-measure-svg .free-handle,
+    .free-measure-svg .free-handle-hit,
+    .free-measure-svg .free-handle-label{
+      pointer-events:auto;
+      cursor:grab;
+      touch-action:none;
+    }
+    .free-measure-svg .free-handle:active,
+    .free-measure-svg .free-handle-hit:active,
+    .free-measure-svg .free-handle-label:active{
+      cursor:grabbing;
+    }
+    .object-wrap.free-measure{
+      cursor:crosshair;
+    }
 
     .ruler-wrap{
       position:absolute;
@@ -317,6 +465,49 @@
     #answerBtn.pulsing{
       animation:answerPulse 1.0s ease-in-out infinite;
     }
+
+    .free-answer-panel{
+      display:none;
+      position:fixed;
+      left:50%;
+      bottom:24px;
+      transform:translateX(-50%);
+      z-index:120;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      width:max-content;
+      max-width:calc(100vw - 20px);
+      padding:12px 16px;
+      border-radius:18px;
+      background:rgba(255,255,255,.97);
+      border:3px solid #2563eb;
+      box-shadow:0 14px 38px rgba(15,23,42,.24);
+      font-weight:900;
+    }
+    .free-answer-panel.visible{display:flex;}
+    .free-answer-panel input{
+      width:76px;
+      font-size:22px;
+      font-weight:900;
+      text-align:center;
+      padding:6px 8px;
+      border:2px solid #94a3b8;
+      border-radius:12px;
+    }
+    .free-answer-panel .answer-unit{display:inline-flex;align-items:center;gap:5px;}
+    .free-answer-panel .answer-prompt{width:100%;text-align:center;font-size:16px;font-weight:950;color:#1d4ed8;line-height:1.25;}
+    .free-answer-panel .answer-message{width:100%;text-align:center;font-size:14px;color:#b45309;min-height:20px;}
+    .free-answer-panel #freeRevealBtn{display:none;}
+    .free-answer-panel #freeRevealBtn.visible{display:inline-flex;}
+    @media (max-width:900px), (max-height:720px){
+      .free-answer-panel{gap:6px;padding:8px 10px;border-width:2px;border-radius:14px;max-width:calc(100vw - 12px);}
+      .free-answer-panel input{width:58px;font-size:18px;padding:5px 6px;}
+      .free-answer-panel button{padding:7px 10px;font-size:13px;}
+      .free-answer-panel .answer-message{font-size:12px;min-height:16px;}
+    }
+
     /* 測るアニメ開始ボタン スナップ後パルス */
     @keyframes measurePulse{
       0%,100%{transform:scale(1);box-shadow:0 2px 10px rgba(37,99,235,.3);}
@@ -329,7 +520,7 @@
     .hint-badge,.toast{
       position:absolute;
       left:50%;
-      transform:translateX(-50%);
+      transform:translateX(-50%) scale(var(--stage-ui-inv));
       border-radius:18px;
       font-weight:900;
       pointer-events:none;
@@ -338,6 +529,7 @@
     }
     .hint-badge{
       top:18px;
+      transform-origin:50% 0;
       background:rgba(17,24,39,.9);
       color:#fff;
       padding:10px 16px;
@@ -345,9 +537,10 @@
       opacity:0;
       transition:opacity .22s ease, transform .22s ease;
     }
-    .hint-badge.show{opacity:1;transform:translateX(-50%) translateY(2px)}
+    .hint-badge.show{opacity:1;transform:translateX(-50%) scale(var(--stage-ui-inv));}
     .toast{
       bottom:26px;
+      transform-origin:50% 100%;
       background:rgba(17,24,39,.93);
       color:#fff;
       padding:14px 18px;
@@ -357,7 +550,7 @@
       max-width:min(90vw,760px);
       text-align:center;
     }
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast.show{opacity:1;transform:translateX(-50%) scale(var(--stage-ui-inv));}
 
     .overlay{
       position:absolute;
@@ -436,6 +629,185 @@
       white-space:nowrap;
       border:0;
     }
+
+
+    /* ── v8: 児童向けポップUI ───────────────────────── */
+    :root{
+      --pop-blue:#3b82f6;
+      --pop-purple:#8b5cf6;
+      --pop-yellow:#facc15;
+      --pop-pink:#fb7185;
+      --pop-mint:#34d399;
+    }
+    body{
+      background:
+        radial-gradient(circle at 8% 0%, rgba(250,204,21,.18), transparent 28%),
+        radial-gradient(circle at 92% 5%, rgba(59,130,246,.17), transparent 30%),
+        linear-gradient(180deg,#fbfdff 0%,#f4f7ff 58%,#eef6ff 100%);
+    }
+    .topbar{
+      border:2px solid rgba(96,165,250,.20);
+      background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(245,249,255,.96));
+      box-shadow:0 10px 28px rgba(59,130,246,.10),0 2px 8px rgba(15,23,42,.05);
+    }
+    .title h1{
+      font-size:24px;
+      letter-spacing:.02em;
+      color:#172554;
+      display:flex;
+      align-items:center;
+      gap:7px;
+    }
+    .title h1::before{content:'📏';font-size:25px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.08));}
+    .title .sub{font-weight:700;color:#64748b;}
+    button,.switch,.pill,.advanced-controls > summary{
+      border:1.5px solid rgba(148,163,184,.18);
+      box-shadow:0 3px 0 rgba(15,23,42,.06),0 5px 12px rgba(15,23,42,.05);
+      transition:transform .12s ease,box-shadow .12s ease,filter .12s ease,opacity .12s ease;
+    }
+    button:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.02);box-shadow:0 5px 0 rgba(15,23,42,.06),0 8px 16px rgba(15,23,42,.07);}
+    button:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 rgba(15,23,42,.08);}
+    button:disabled{cursor:not-allowed;filter:saturate(.55);}
+    button.primary{
+      background:linear-gradient(135deg,#3b82f6,#6366f1);
+      color:#fff;
+      border-color:rgba(37,99,235,.22);
+    }
+    button.ghost{background:linear-gradient(180deg,#f8fbff,#eaf3ff);color:#1d4ed8;border-color:#bfdbfe;}
+    #newProblemBtn{background:linear-gradient(135deg,#fff7d6,#fef3c7);color:#92400e;border-color:#fde68a;}
+    #resetBtn{background:linear-gradient(180deg,#fff,#f1f5f9);color:#475569;}
+    #freeMeasureBtn.ruler-toggle-active{background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;border-color:#7c3aed;}
+    #soundBtn.sound-on{background:linear-gradient(135deg,#dbeafe,#e0e7ff);}
+    #measureBtn.free-ready{
+      background:linear-gradient(135deg,#fb923c,#f43f5e);
+      border-color:#fb7185;
+      box-shadow:0 5px 0 rgba(190,24,93,.16),0 8px 22px rgba(244,63,94,.24);
+    }
+
+    .free-guide-bar{
+      position:relative;
+      overflow:hidden;
+      border:2px solid #bfdbfe;
+      background:linear-gradient(135deg,#ffffff 0%,#eff6ff 58%,#f5f3ff 100%);
+      box-shadow:0 9px 24px rgba(59,130,246,.12);
+      padding:10px 13px;
+    }
+    .free-guide-bar::after{
+      content:'';
+      position:absolute;
+      width:110px;height:110px;border-radius:50%;
+      right:-38px;top:-62px;
+      background:rgba(250,204,21,.17);
+      pointer-events:none;
+    }
+    .free-guide-step{
+      width:46px;height:46px;
+      background:linear-gradient(135deg,#3b82f6,#6366f1);
+      border:3px solid rgba(255,255,255,.95);
+      box-shadow:0 5px 14px rgba(59,130,246,.25);
+    }
+    .free-guide-bar[data-step="2"] .free-guide-step{background:linear-gradient(135deg,#8b5cf6,#a855f7);}
+    .free-guide-bar[data-step="3"] .free-guide-step{background:linear-gradient(135deg,#f59e0b,#fb923c);}
+    .free-guide-bar[data-step="4"] .free-guide-step{background:linear-gradient(135deg,#10b981,#22c55e);}
+    .free-guide-title{font-size:19px;color:#172554;}
+    .free-guide-sub{font-size:13px;color:#52627a;}
+    .free-progress{
+      display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:7px;
+    }
+    .free-progress-chip{
+      display:inline-flex;align-items:center;gap:3px;
+      padding:4px 8px;border-radius:999px;
+      font-size:11px;font-weight:900;
+      color:#64748b;background:#fff;border:1px solid #dbeafe;
+    }
+    .free-progress-chip.done{background:#dcfce7;color:#166534;border-color:#bbf7d0;}
+    .free-progress-chip.active{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd;box-shadow:0 0 0 3px rgba(59,130,246,.10);}
+    .free-guide-actions button{font-weight:900;}
+    #precisionSelectBtn{background:linear-gradient(135deg,#fef9c3,#fde68a);color:#854d0e;border-color:#facc15;}
+    #clearFreeBtn{background:linear-gradient(180deg,#fff,#f8fafc);color:#475569;border-color:#cbd5e1;}
+    #edgeSnapBtn.ruler-toggle-active{background:linear-gradient(135deg,#cffafe,#dbeafe);color:#075985;border-color:#67e8f9;}
+    #longestChallengeBtn.ruler-toggle-active{background:linear-gradient(135deg,#fce7f3,#ede9fe);color:#7e22ce;border-color:#d8b4fe;}
+
+    .stage{
+      border:2px solid rgba(147,197,253,.20);
+      background:
+        radial-gradient(circle at 25% 18%,rgba(255,255,255,.98),rgba(255,255,255,.75) 32%,transparent 60%),
+        linear-gradient(180deg,#fafdff,#f2f8ff);
+      box-shadow:0 14px 34px rgba(30,64,175,.09);
+    }
+    .object-wrap .label{
+      background:linear-gradient(135deg,#334155,#0f172a);
+      border:2px solid rgba(255,255,255,.9);
+      box-shadow:0 5px 12px rgba(15,23,42,.16);
+      font-size:14px;
+    }
+    /* 物体名は測定には不要。縮小時に極小文字になるため表示しない。 */
+    .object-wrap .label{display:none !important;}
+    .ruler-svg{filter:drop-shadow(0 12px 16px rgba(15,23,42,.16));}
+    .bottombar{
+      min-height:48px;
+      background:linear-gradient(135deg,rgba(255,255,255,.97),rgba(248,250,252,.96));
+      border:1.5px solid rgba(148,163,184,.18);
+      box-shadow:0 8px 22px rgba(15,23,42,.07);
+    }
+    .result{color:#172554;}
+    .result:empty{min-height:0;}
+    .free-answer-panel{
+      border-color:#60a5fa;
+      background:linear-gradient(135deg,rgba(255,255,255,.99),rgba(239,246,255,.99));
+      box-shadow:0 16px 44px rgba(37,99,235,.24);
+    }
+    .free-answer-panel::before{
+      content:'✏️ よんだ長さを入れよう';
+      width:100%;text-align:center;font-size:14px;font-weight:950;color:#1d4ed8;
+    }
+    .free-answer-panel input:focus{outline:3px solid rgba(59,130,246,.20);border-color:#3b82f6;}
+    .toast{border:2px solid rgba(255,255,255,.18);}
+
+
+    .zoom-tools{
+      display:inline-flex;align-items:center;gap:3px;padding:3px;
+      border-radius:999px;background:#f1f5f9;border:1.5px solid #e2e8f0;
+      box-shadow:inset 0 1px 2px rgba(15,23,42,.04);
+    }
+    .zoom-tools button{padding:7px 10px;min-width:38px;background:#fff;color:#334155;box-shadow:none;}
+    .zoom-tools #zoomResetBtn{padding-inline:10px;font-size:12px;}
+    .zoom-tools .zoom-indicator{min-width:78px;padding:7px 9px;background:#fff;box-shadow:none;}
+    #measureBtn{min-height:42px;padding-inline:18px;font-size:15px;}
+    .result.has-result{
+      display:inline-flex;align-items:center;min-height:38px;
+      padding:6px 13px;border-radius:14px;background:#ecfdf5;
+      border:2px solid #a7f3d0;box-shadow:0 4px 12px rgba(16,185,129,.10);
+    }
+
+    @media (max-width:1100px){
+      .app{padding:9px;gap:8px;}
+      .topbar{padding:9px 11px;border-radius:18px;}
+      .title h1{font-size:20px;}
+      .title .sub{font-size:12px;}
+      .controls{gap:6px;}
+      .controls > button,.advanced-controls > summary{padding:8px 10px;font-size:13px;}
+      .free-guide-bar{border-radius:15px;min-height:56px;padding:8px 10px;}
+      .free-guide-step{width:39px;height:39px;font-size:19px;}
+      .free-guide-title{font-size:16px;}
+      .free-guide-sub{font-size:12px;}
+      .free-progress-chip{font-size:10px;padding:3px 6px;}
+    }
+    @media (max-height:760px){
+      .app{padding:7px;gap:6px;}
+      .topbar{padding:7px 9px;}
+      .title .sub{margin-top:2px;}
+      .free-guide-bar{padding:7px 9px;min-height:50px;}
+      .free-guide-step{width:37px;height:37px;font-size:18px;}
+      .free-guide-title{font-size:15px;}
+      .free-guide-sub{font-size:11px;margin-top:1px;}
+      .free-progress{margin-top:4px;}
+      .free-progress-chip{padding:2px 6px;font-size:9px;}
+      .free-guide-actions button{padding:6px 8px;font-size:11px;}
+      .bottombar{padding:6px 10px;min-height:38px;}
+      .result{font-size:18px;}
+    }
+
   </style>
 </head>
 <body>
@@ -443,30 +815,68 @@
     <div class="topbar">
       <div class="title">
         <h1>長さの学習アプリ</h1>
-        <div class="sub">物差しの「0」を対象物の左下に合わせて、cm と mm を読もう</div>
+        <div class="sub" id="subtitleText">ものさしの「0」を、はかるものの ひだりはしに合わせて、cm と mm を読もう</div>
       </div>
 
       <div class="controls">
-        <label class="switch"><input id="hintToggle" type="checkbox" checked> mm色分けヒント</label>
-        <button id="newProblemBtn" class="ghost">次の問題</button>
-        <span id="problemIdBadge" class="pill" style="background:#fef9c3;border:1px solid #ca8a04;color:#92400e;font-size:13px;">問題ID: 1</span>
-        <button id="rerollPencilBtn" class="ghost">鉛筆を再生成</button>
-        <button id="resetBtn">最初にもどす</button>
-        <button id="zoomOutBtn">－</button>
-        <div id="zoomText" class="pill zoom-indicator">拡大 20%</div>
-        <button id="zoomInBtn">＋</button>
-        <button id="zoomResetBtn">標準</button>
-        <button id="modeBtn" class="ghost">通常測定モード</button>
-        <button id="rulerTypeBtn" class="ghost">🎋 竹ものさし</button>
-        <button id="readModeBtn" class="ghost">🔊 正式読み</button>
-        <button id="measureBtn" class="primary">測るアニメ開始</button>
-        <button id="answerBtn">🔍 答え合わせ</button>
-        
-<button id="imageLoadBtn">画像を読み込む</button>
-<input id="imageInput" type="file" accept="image/*" style="display:none">
-<button id="loadFolderBtn" title="同フォルダのPNGを問題ID4以降に自動追加">📁 PNGフォルダ読み込み</button>
-
+        <button id="newProblemBtn" class="ghost">つぎのもんだい</button>
+        <button id="resetBtn">はじめにもどす</button>
+        <div class="zoom-tools" aria-label="大きさをかえる">
+          <button id="zoomOutBtn" aria-label="ちいさくする">－</button>
+          <div id="zoomText" class="pill zoom-indicator">大きさ 20%</div>
+          <button id="zoomInBtn" aria-label="おおきくする">＋</button>
+          <button id="zoomResetBtn">もと</button>
+        </div>
+        <button id="freeMeasureBtn" class="ghost">🪄 じゆうにはかる</button>
+        <button id="measureBtn" class="primary">はかる！</button>
+        <button id="answerBtn">🔍 こたえあわせ</button>
+        <div id="freeAnswerPanel" class="free-answer-panel" aria-live="polite">
+          <div id="answerPrompt" class="answer-prompt">目盛りを読んで入れよう</div>
+          <span id="freeCmWrap" class="answer-unit"><input id="freeCmInput" type="number" inputmode="numeric" min="0" max="30" step="1" aria-label="センチメートル"><span>cm</span></span>
+          <span class="answer-unit"><input id="freeMmInput" type="number" inputmode="numeric" min="0" max="300" step="1" aria-label="ミリメートル"><span id="freeMmUnit">mm</span></span>
+          <button id="freeAnswerCheckBtn" class="primary">こたえあわせ</button>
+          <button id="freeRevealBtn" class="ghost">こたえを見る</button>
+          <div id="freeAnswerMessage" class="answer-message"></div>
+        </div>
+        <details class="advanced-controls">
+          <summary>⚙️ せってい</summary>
+          <div class="advanced-panel">
+            <label class="switch"><input id="hintToggle" type="checkbox" checked> mmの色ヒント</label>
+            <button id="modeBtn" class="ghost">cmとmm</button>
+            <button id="rulerTypeBtn" class="ghost">🎋 竹ものさし</button>
+            <span id="problemIdBadge" class="pill" style="background:#fef9c3;border:1px solid #ca8a04;color:#92400e;font-size:13px;">問題ID: 1</span>
+            <button id="rerollPencilBtn" class="ghost">鉛筆を再生成</button>
+            <button id="readModeBtn" class="ghost">🔊 正式読み</button>
+            <button id="imageLoadBtn">画像を読み込む</button>
+            <input id="imageInput" type="file" accept="image/*" style="display:none">
+            <button id="loadFolderBtn" title="同フォルダのPNGを問題ID4以降に自動追加">📁 PNGフォルダ読み込み</button>
+          </div>
+        </details>
         <button id="soundBtn" class="sound-off" aria-label="音声切り替え">🔊</button>
+      </div>
+    </div>
+
+    <div class="free-guide-bar" id="freeGuide" aria-live="polite">
+      <div class="free-guide-main">
+        <div class="free-guide-step" id="freeGuideStep">1</div>
+        <div class="free-guide-copy">
+          <div class="free-guide-title" id="freeGuideTitle">1つめの はしをタップ</div>
+          <div class="free-guide-sub" id="freeGuideSub">はかりたいところの、はしを1つえらぼう。</div>
+          <div class="free-progress" id="freeProgress" aria-hidden="true">
+            <span class="free-progress-chip active" data-free-progress="1">① はし1</span>
+            <span class="free-progress-chip" data-free-progress="2">② はし2</span>
+            <span class="free-progress-chip" data-free-progress="3">③ 0合わせ</span>
+            <span class="free-progress-chip" data-free-progress="4">④ はかる</span>
+          </div>
+          <div class="free-image-scale-note">このモードは「この絵の中の長さ」をはかります。じっさいの大きさではありません。</div>
+        </div>
+      </div>
+      <div class="free-guide-actions">
+        <button id="precisionSelectBtn" class="ghost">🔎 近くを拡大</button>
+        <button id="freeActionBtn" class="ghost">✋ えをうごかす</button>
+        <button id="clearFreeBtn" class="ghost">↩ えらびなおす</button>
+        <button id="edgeSnapBtn" class="ghost">🧲 ふちにピタッ ✓</button>
+        <button id="longestChallengeBtn" class="ghost">🎯 いちばん長いところ</button>
       </div>
     </div>
 
@@ -474,14 +884,14 @@
       <div class="stage-viewport" id="stageViewport">
         <div class="stage-spacer" id="stageSpacer"></div>
         <div class="stage-surface" id="stageSurface">
-          <div class="floating-note">※物差しは 1mm = 17px の高精度設計です。拡大縮小しても目盛り位置は崩れません。</div>
+          <div class="floating-note">0と、はかりたいところのはしを ぴったり合わせよう。</div>
 
-          <div class="object-wrap" id="objectWrap" aria-label="測定対象物品">
+          <div class="object-wrap" id="objectWrap" aria-label="はかるもの">
             <div class="label" id="objectLabel">消しゴム</div>
             <div id="objectBody"></div>
           </div>
 
-          <div class="ruler-wrap bamboo" id="rulerWrap" aria-label="物差し">
+          <div class="ruler-wrap bamboo" id="rulerWrap" aria-label="ものさし">
 
             <!-- 竹ものさし -->
             <svg id="rulerSvg" class="ruler-svg" viewBox="0 0 5100 303" shape-rendering="geometricPrecision" preserveAspectRatio="none">
@@ -545,6 +955,7 @@
 
           </div>
 
+          <svg id="freeAlignmentOverlay" class="overlay alignment-overlay" viewBox="0 0 6500 1400" preserveAspectRatio="none"></svg>
           <svg id="measureOverlay" class="overlay" viewBox="0 0 6500 1400" preserveAspectRatio="none"></svg>
 
           
@@ -564,14 +975,14 @@ pointer-events:none;
   ">
 </div>
 
-        <div class="hint-badge" id="hintBadge">端と０を合わせたね！</div>
+        <div class="hint-badge" id="hintBadge">はしと0が そろったね！</div>
           <div class="toast" id="toast"></div>
         </div>
       </div>
     </div>
 
     <div class="bottombar">
-      <button id="debugBtn">🔧 DEBUG</button>
+      <button id="debugBtn" style="display:none">🔧 DEBUG</button>
       <div class="result" id="resultText"></div>
       <div id="debugPanel">
         <div class="pill">対象：<b id="objectText">消しゴム</b></div>
@@ -601,9 +1012,16 @@ pointer-events:none;
   const stageViewport = document.getElementById('stageViewport');
   const stageSpacer = document.getElementById('stageSpacer');
   const measureOverlay = document.getElementById('measureOverlay');
+  const freeAlignmentOverlay = document.getElementById('freeAlignmentOverlay');
   const objectWrap = document.getElementById('objectWrap');
   const objectBody = document.getElementById('objectBody');
   const objectLabel = document.getElementById('objectLabel');
+  const subtitleText = document.getElementById('subtitleText');
+  const freeGuide = document.getElementById('freeGuide');
+  const freeGuideStep = document.getElementById('freeGuideStep');
+  const freeGuideTitle = document.getElementById('freeGuideTitle');
+  const freeGuideSub = document.getElementById('freeGuideSub');
+  const precisionSelectBtn = document.getElementById('precisionSelectBtn');
   const rulerWrap = document.getElementById('rulerWrap');
   const hintToggle = document.getElementById('hintToggle');
   const newProblemBtn = document.getElementById('newProblemBtn');
@@ -614,6 +1032,11 @@ pointer-events:none;
   const zoomResetBtn = document.getElementById('zoomResetBtn');
   const zoomText = document.getElementById('zoomText');
   const modeBtn = document.getElementById('modeBtn');
+  const freeMeasureBtn = document.getElementById('freeMeasureBtn');
+  const freeActionBtn = document.getElementById('freeActionBtn');
+  const clearFreeBtn = document.getElementById('clearFreeBtn');
+  const edgeSnapBtn = document.getElementById('edgeSnapBtn');
+  const longestChallengeBtn = document.getElementById('longestChallengeBtn');
   const measureBtn = document.getElementById('measureBtn');
   const imageLoadBtn = document.getElementById('imageLoadBtn');
   const imageInput = document.getElementById('imageInput');
@@ -649,9 +1072,9 @@ pointer-events:none;
   // ── 問題IDシステム ──────────────────────────────
   // 固定問題: ID1=消しゴム4cm, ID2=釦5mm, ID3=鉛筆8cm7mm
   const FIXED_PROBLEMS = [
-    { type: 'eraser',  lengthMm: 40,  label: '消しゴム（4cm）' },
-    { type: 'button',  lengthMm: 5,   label: '釦（5mm）' },
-    { type: 'pencil',  lengthMm: 87,  label: '鉛筆（8cm7mm）' },
+    { type: 'eraser',  lengthMm: 40,  label: '消しゴム' },
+    { type: 'button',  lengthMm: 5,   label: 'ボタン' },
+    { type: 'pencil',  lengthMm: 87,  label: '鉛筆' },
   ];
 
   // 同フォルダPNG管理
@@ -659,16 +1082,42 @@ pointer-events:none;
   let pngFileList = [];          // { name, src, ratio } の配列
   let currentProblemIndex = 0;   // 0始まり（ID1=index0）
 
-  // 起動時：直書きPNGをfetchで自動読み込み
+  // 外部PNGがない単体HTMLでも画像問題が消えないよう、軽量な図形フォールバックを持つ。
+  // 同フォルダに本来のPNGがある場合は、そちらを優先する。
+  function makeFallbackImageFile(name) {
+    const commonStart = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><g stroke="#334155" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">`;
+    const commonEnd = `</g></svg>`;
+    const shapes = {
+      candy: `<path d="M170 140 L110 95 L125 165 L85 210 L150 215 L175 270" fill="#fef3c7"/><rect x="170" y="115" width="260" height="165" rx="74" fill="#f59e0b"/><path d="M430 140 L490 95 L475 165 L515 210 L450 215 L425 270" fill="#fef3c7"/>`,
+      ika: `<ellipse cx="300" cy="165" rx="118" ry="112" fill="#fde68a"/><path d="M235 250 Q190 340 225 365 M270 255 Q250 350 280 375 M310 258 Q315 350 320 378 M350 252 Q390 340 375 365" fill="none"/><circle cx="260" cy="145" r="14" fill="#334155" stroke="none"/><circle cx="340" cy="145" r="14" fill="#334155" stroke="none"/>`,
+      kani: `<ellipse cx="300" cy="215" rx="105" ry="72" fill="#fb7185"/><path d="M200 200 L120 145 L75 175 M205 235 L115 260 L75 235 M400 200 L480 145 L525 175 M395 235 L485 260 L525 235 M225 150 L185 90 L130 95 M375 150 L415 90 L470 95" fill="none"/><circle cx="265" cy="190" r="10" fill="#334155" stroke="none"/><circle cx="335" cy="190" r="10" fill="#334155" stroke="none"/>`,
+      kutu1: `<path d="M95 245 Q160 215 220 118 L305 135 Q330 220 515 245 Q545 250 530 305 L115 305 Q80 290 95 245 Z" fill="#60a5fa"/>`,
+      kutu2: `<path d="M90 255 Q165 235 250 145 L335 160 Q365 230 515 255 Q548 260 525 315 L105 315 Q78 295 90 255 Z" fill="#a78bfa"/><path d="M220 190 L330 205 M205 220 L345 235" fill="none"/>`,
+      kabuto: `<path d="M300 80 Q210 95 190 210 Q190 310 300 330 Q410 310 410 210 Q390 95 300 80 Z" fill="#475569"/><path d="M300 82 L300 332 M245 95 Q205 45 175 80 M355 95 Q395 45 425 80" fill="none"/>`,
+      sakana: `<path d="M105 205 L195 125 Q330 70 440 190 Q330 315 195 270 Z" fill="#38bdf8"/><path d="M440 190 L535 115 L520 270 Z" fill="#7dd3fc"/><circle cx="180" cy="180" r="13" fill="#334155" stroke="none"/>`,
+      kuwa: `<ellipse cx="300" cy="220" rx="90" ry="105" fill="#854d0e"/><ellipse cx="300" cy="125" rx="65" ry="55" fill="#713f12"/><path d="M270 90 Q215 35 205 115 M330 90 Q385 35 395 115 M215 195 L130 140 M205 235 L115 235 M225 280 L145 330 M385 195 L470 140 M395 235 L485 235 M375 280 L455 330" fill="none"/>`,
+      tombo: `<ellipse cx="300" cy="210" rx="26" ry="135" fill="#f59e0b"/><path d="M285 175 Q165 80 105 135 Q170 215 285 205 M315 175 Q435 80 495 135 Q430 215 315 205 M285 225 Q165 245 125 315 Q220 330 295 250 M315 225 Q435 245 475 315 Q380 330 305 250" fill="#bfdbfe"/><circle cx="300" cy="62" r="34" fill="#334155"/>`
+    };
+    const body = shapes[name] || shapes.candy;
+    const svg = commonStart + body + commonEnd;
+    return new File([svg], `${name}_fallback.svg`, { type: 'image/svg+xml' });
+  }
+
+  // 起動時：同フォルダPNGを読み込み。なければ上の軽量図形へ自動フォールバック。
   async function preloadBuiltinPngs() {
     const results = await Promise.allSettled(
       PNG_NAMES.map(async name => {
-        const res = await fetch(`./${name}.png`);
-        if (!res.ok) throw new Error(`404: ${name}.png`);
-        const blob = await res.blob();
-        const file = new File([blob], `${name}.png`, { type: 'image/png' });
+        let file;
+        try {
+          const res = await fetch(`./${name}.png`);
+          if (!res.ok) throw new Error(`404: ${name}.png`);
+          const blob = await res.blob();
+          file = new File([blob], `${name}.png`, { type: 'image/png' });
+        } catch (_) {
+          file = makeFallbackImageFile(name);
+        }
         const processed = await preprocessImageFile(file);
-        return { name, src: processed.src, ratio: processed.ratio };
+        return { name, src: processed.src, ratio: processed.ratio, edgePoints: processed.edgePoints || [], longestPair: processed.longestPair || null, outlineReliable: !!processed.outlineReliable, cropped: !!processed.cropped };
       })
     );
     pngFileList = results
@@ -695,11 +1144,13 @@ pointer-events:none;
         try {
           const file = await handle.getFile();
           const processed = await preprocessImageFile(file);
-          loaded.push({ name, src: processed.src, ratio: processed.ratio });
+          loaded.push({ name, src: processed.src, ratio: processed.ratio, edgePoints: processed.edgePoints || [], longestPair: processed.longestPair || null, outlineReliable: !!processed.outlineReliable, cropped: !!processed.cropped });
         } catch (_) {}
       }
-      // 既存リストを置き換え（フォルダ選択で上書き）
-      pngFileList = loaded;
+      // 内蔵PNGは残し、同名だけ差し替え、それ以外は追加する。
+      const merged = new Map(pngFileList.map(item => [item.name, item]));
+      loaded.forEach(item => merged.set(item.name, item));
+      pngFileList = Array.from(merged.values());
       return true;
     } catch (_) {
       return false;
@@ -725,6 +1176,10 @@ pointer-events:none;
       label: png.name.replace(/\.png$/i, ''),
       pngSrc: png.src,
       pngRatio: png.ratio,
+      edgePoints: png.edgePoints || [],
+      longestPair: png.longestPair || null,
+      outlineReliable: !!png.outlineReliable,
+      cropped: !!png.cropped,
       isFixed: false
     };
   }
@@ -756,32 +1211,44 @@ pointer-events:none;
       applyProblemById(1);
       return;
     }
-    applyProblemById(id);
+    applyProblemById(id, prob);
   }
 
-  function applyProblemById(id) {
-    const prob = getProblemById(id);
+  function applyProblemById(id, providedProblem = null) {
+    const prob = providedProblem || getProblemById(id);
     if (!prob) return;
     updateProblemIdBadge(id);
 
     if (prob.type === 'image' && prob.pngSrc) {
       state.customImageSrc   = prob.pngSrc;
       state.customImageRatio = prob.pngRatio || 0.75;
+      state.customImageEdgePoints = prob.edgePoints || [];
+      state.customImageLongestPair = prob.longestPair || null;
+      state.customImageOutlineReliable = !!prob.outlineReliable;
+      state.customImageWasCropped = !!prob.cropped;
+      if (!state.customImageOutlineReliable || !state.customImageLongestPair) state.longestChallenge = false;
     }
 
     const label = prob.label || formatObjectLabel(prob.type);
     setProblem(prob.type, prob.lengthMm, true, label);
-    showToast(`問題ID ${id}：${label}`, 2000);
   }
   // ── /問題IDシステム ─────────────────────────────
 
   const state = {
     zoom: 0.2,
-    audioEnabled: false,
+    audioEnabled: true,
     snapped: false,
     snapping: false,
     dragging: false,
     measuring: false,
+    measureViewInteractive: false,
+    measurePanActive: false,
+    measurePanPointerId: null,
+    measurePanStartClientX: 0,
+    measurePanStartClientY: 0,
+    measurePanStartScrollLeft: 0,
+    measurePanStartScrollTop: 0,
+    freeAdjustmentAnimating: false,
     currentProblemId: 0,
     objectType: 'eraser',
     lengthMm: 40,
@@ -800,6 +1267,30 @@ pointer-events:none;
     dragStartTop: 0,
     overlayToken: 0,
     measureMode: 'normal',
+    freeMeasureEnabled: false,
+    freeInteractionMode: 'points',
+    freePointA: null,
+    freePointB: null,
+    freeSelectedMm: null,
+    freeRotationRad: 0,
+    outlineSnapEnabled: true,
+    longestChallenge: false,
+    customImageEdgePoints: [],
+    customImageLongestPair: null,
+    customImageOutlineReliable: false,
+    customImageWasCropped: false,
+    freeHandleDragging: false,
+    freeHandleKey: null,
+    freeHandlePointerId: null,
+    freeHandleStartA: null,
+    freeHandleStartB: null,
+    freeAnswerShown: false,
+    pendingAnswerMm: null,
+    answerAttempts: 0,
+    pendingAcceptedMms: [],
+    pendingAnswerNearestMode: false,
+    resolvedAnswerMm: null,
+    autoZoomRestore: null,
     objectDragging: false,
     objectDragPointerId: null,
     objectDragStartClientX: 0,
@@ -880,7 +1371,8 @@ pointer-events:none;
     return luminance(r, g, b) > 244 && dist <= threshold * 1.35;
   }
 
-  async function preprocessImageFile(file) {
+  async function preprocessImageFile(file, options = {}) {
+    const allowCrop = options.allowCrop !== false;
     const src = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onerror = () => reject(new Error('file-read-failed'));
@@ -897,33 +1389,57 @@ pointer-events:none;
 
     const srcW = img.naturalWidth || 1;
     const srcH = img.naturalHeight || 1;
-
     const maxSide = 2400;
     const downScale = Math.min(1, maxSide / Math.max(srcW, srcH));
 
     const baseCanvas = document.createElement('canvas');
     baseCanvas.width = Math.max(1, Math.round(srcW * downScale));
     baseCanvas.height = Math.max(1, Math.round(srcH * downScale));
-
     const baseCtx = baseCanvas.getContext('2d', { willReadFrequently: true });
     baseCtx.drawImage(img, 0, 0, baseCanvas.width, baseCanvas.height);
 
     const { width, height } = baseCanvas;
     const imageData = baseCtx.getImageData(0, 0, width, height).data;
     const bg = sampleBorderBackground(imageData, width, height);
-
-    let minX = width, minY = height, maxX = -1, maxY = -1;
-
-    const edgeMargin = Math.max(2, Math.round(Math.min(width, height) * 0.015));
     const localThreshold = 70;
 
+    // 画像端がほぼ同じ背景色かを確認する。写真・複雑背景では補助認識を使わない。
+    let borderSamples = 0;
+    let borderBgLike = 0;
+    const borderStep = Math.max(1, Math.floor(Math.min(width, height) / 90));
+    const checkBorder = (x, y) => {
+      const i = (y * width + x) * 4;
+      borderSamples += 1;
+      if (isBackgroundPixel(imageData[i], imageData[i+1], imageData[i+2], imageData[i+3], bg, localThreshold)) borderBgLike += 1;
+    };
+    for (let x = 0; x < width; x += borderStep) { checkBorder(x, 0); checkBorder(x, height - 1); }
+    for (let y = 0; y < height; y += borderStep) { checkBorder(0, y); checkBorder(width - 1, y); }
+    const borderBgRatio = borderSamples ? borderBgLike / borderSamples : 0;
+
+    // 元画像の前景占有率を、切り抜く前に見る。
+    // 白枠付き写真のような画像を「余白だけの教材画像」と誤認して切らないための防御。
+    const occupancyStep = Math.max(1, Math.round(Math.max(width, height) / 180));
+    let fgSamples = 0, allSamples = 0;
+    for (let y = 0; y < height; y += occupancyStep) {
+      for (let x = 0; x < width; x += occupancyStep) {
+        const i = (y * width + x) * 4;
+        allSamples += 1;
+        if (!isBackgroundPixel(imageData[i], imageData[i+1], imageData[i+2], imageData[i+3], bg, localThreshold)) fgSamples += 1;
+      }
+    }
+    const baseFillRatio = allSamples ? fgSamples / allSamples : 1;
+    let outlineReliable = borderBgRatio >= 0.76 && baseFillRatio >= 0.01 && baseFillRatio <= 0.88;
+    // JPEGは一般に写真である可能性が高い。誤吸着より「補助なしの自由測定」を優先する。
+    if (/image\/(jpeg|jpg)/i.test(file.type || '')) outlineReliable = false;
+
+    // 前景の外接矩形を求める。ただし実際に切るのは「教材画像らしい」と判定できたときだけ。
+    let minX = width, minY = height, maxX = -1, maxY = -1;
+    const edgeMargin = Math.max(2, Math.round(Math.min(width, height) * 0.015));
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const i = (y * width + x) * 4;
         const r = imageData[i], g = imageData[i + 1], b = imageData[i + 2], a = imageData[i + 3];
         const isBg = isBackgroundPixel(r, g, b, a, bg, localThreshold);
-
-        // Keep a bit more tolerance near the edges so border shadows are removed.
         const edgeBias = (x < edgeMargin || y < edgeMargin || x >= width - edgeMargin || y >= height - edgeMargin);
         if (!(isBg || (edgeBias && luminance(r, g, b) > 150 && colorDistance(r, g, b, bg.r, bg.g, bg.b) < 120))) {
           if (x < minX) minX = x;
@@ -935,42 +1451,168 @@ pointer-events:none;
     }
 
     let cropCanvas = baseCanvas;
-    let cropRatio = baseCanvas.height / baseCanvas.width;
-
-    if (maxX >= minX && maxY >= minY) {
-      const padX = 0;
-      const padY = 0;
-
-      const x = Math.max(0, minX - padX);
-      const y = Math.max(0, minY - padY);
-      const w = Math.min(width - x, (maxX - minX + 1) + padX * 2);
-      const h = Math.min(height - y, (maxY - minY + 1) + padY * 2);
-
-      cropCanvas = document.createElement('canvas');
-      cropCanvas.width = Math.max(1, w);
-      cropCanvas.height = Math.max(1, h);
-
-      const cropCtx = cropCanvas.getContext('2d');
-      cropCtx.drawImage(baseCanvas, x, y, w, h, 0, 0, w, h);
-      cropRatio = h / w;
+    let cropped = false;
+    if (allowCrop && outlineReliable && maxX >= minX && maxY >= minY) {
+      const w = maxX - minX + 1;
+      const h = maxY - minY + 1;
+      // 少なくとも片側に意味のある余白があるときだけ切る。
+      const marginFrac = 1 - (w * h) / Math.max(1, width * height);
+      if (marginFrac >= 0.025) {
+        cropCanvas = document.createElement('canvas');
+        cropCanvas.width = Math.max(1, w);
+        cropCanvas.height = Math.max(1, h);
+        cropCanvas.getContext('2d').drawImage(baseCanvas, minX, minY, w, h, 0, 0, w, h);
+        cropped = true;
+      }
     }
 
     const finalMaxSide = 1600;
     let finalCanvas = cropCanvas;
     if (Math.max(cropCanvas.width, cropCanvas.height) > finalMaxSide) {
-      const s = finalMaxSide / Math.max(cropCanvas.width, cropCanvas.height);
+      const sc = finalMaxSide / Math.max(cropCanvas.width, cropCanvas.height);
       finalCanvas = document.createElement('canvas');
-      finalCanvas.width = Math.max(1, Math.round(cropCanvas.width * s));
-      finalCanvas.height = Math.max(1, Math.round(cropCanvas.height * s));
-      const finalCtx = finalCanvas.getContext('2d');
-      finalCtx.drawImage(cropCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
+      finalCanvas.width = Math.max(1, Math.round(cropCanvas.width * sc));
+      finalCanvas.height = Math.max(1, Math.round(cropCanvas.height * sc));
+      finalCanvas.getContext('2d').drawImage(cropCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
+    }
+
+    const cropRatio = finalCanvas.height / Math.max(1, finalCanvas.width);
+    const edgePoints = [];
+    let longestPair = null;
+
+    // 外周候補：サンプリングした前景の「最大連結成分」だけを採用し、
+    // さらに画像外側から到達できる背景に接する点だけを外周とする。
+    // これで内部の穴・白模様・離れた小物を候補からかなり除外できる。
+    try {
+      if (!outlineReliable) throw new Error('outline-unreliable');
+      const fw = finalCanvas.width, fh = finalCanvas.height;
+      const fctx = finalCanvas.getContext('2d', { willReadFrequently: true });
+      const fdata = fctx.getImageData(0, 0, fw, fh).data;
+      const scanStep = Math.max(2, Math.round(Math.max(fw, fh) / 260));
+      const cols = Math.ceil(fw / scanStep);
+      const rows = Math.ceil(fh / scanStep);
+      const n = cols * rows;
+      const fg = new Uint8Array(n);
+      const pxFor = (gx, gy) => ({
+        x: Math.min(fw - 1, gx * scanStep),
+        y: Math.min(fh - 1, gy * scanStep)
+      });
+      for (let gy = 0; gy < rows; gy++) {
+        for (let gx = 0; gx < cols; gx++) {
+          const {x,y} = pxFor(gx,gy);
+          const i = (y * fw + x) * 4;
+          fg[gy * cols + gx] = isBackgroundPixel(fdata[i], fdata[i+1], fdata[i+2], fdata[i+3], bg, localThreshold) ? 0 : 1;
+        }
+      }
+
+      const visited = new Uint8Array(n);
+      let largest = [];
+      let totalFg = 0;
+      for (let i = 0; i < n; i++) if (fg[i]) totalFg++;
+      const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+      for (let sy = 0; sy < rows; sy++) {
+        for (let sx = 0; sx < cols; sx++) {
+          const si = sy * cols + sx;
+          if (!fg[si] || visited[si]) continue;
+          const qx = [sx], qy = [sy];
+          visited[si] = 1;
+          const comp = [];
+          for (let qi = 0; qi < qx.length; qi++) {
+            const x = qx[qi], y = qy[qi];
+            comp.push(y * cols + x);
+            for (const [dx,dy] of dirs) {
+              const nx=x+dx, ny=y+dy;
+              if (nx<0||ny<0||nx>=cols||ny>=rows) continue;
+              const ni=ny*cols+nx;
+              if (fg[ni] && !visited[ni]) { visited[ni]=1; qx.push(nx); qy.push(ny); }
+            }
+          }
+          if (comp.length > largest.length) largest = comp;
+        }
+      }
+
+      const largestRatio = totalFg ? largest.length / totalFg : 0;
+      if (largest.length < 12 || largestRatio < 0.85) {
+        outlineReliable = false;
+        throw new Error('fragmented-foreground');
+      }
+
+      const inLargest = new Uint8Array(n);
+      for (const i of largest) inLargest[i] = 1;
+
+      // 外部背景だけを flood-fill。穴の中の背景には到達しない。
+      const outside = new Uint8Array(n);
+      const q = [];
+      const pushBg = (x,y) => {
+        if (x<0||y<0||x>=cols||y>=rows) return;
+        const i=y*cols+x;
+        if (outside[i] || fg[i]) return;
+        outside[i]=1; q.push(i);
+      };
+      for (let x=0;x<cols;x++){ pushBg(x,0); pushBg(x,rows-1); }
+      for (let y=0;y<rows;y++){ pushBg(0,y); pushBg(cols-1,y); }
+      for (let qi=0; qi<q.length; qi++) {
+        const i=q[qi], x=i%cols, y=Math.floor(i/cols);
+        for (const [dx,dy] of dirs) pushBg(x+dx,y+dy);
+      }
+
+      for (const i of largest) {
+        const gx=i%cols, gy=Math.floor(i/cols);
+        let outer=false;
+        for (const [dx,dy] of dirs) {
+          const nx=gx+dx, ny=gy+dy;
+          if (nx<0||ny<0||nx>=cols||ny>=rows) { outer=true; break; }
+          if (outside[ny*cols+nx]) { outer=true; break; }
+        }
+        if (outer) {
+          const {x,y}=pxFor(gx,gy);
+          edgePoints.push({ x:x/Math.max(1,fw-1), y:y/Math.max(1,fh-1) });
+        }
+      }
+
+      if (edgePoints.length > 650) {
+        const stride = Math.ceil(edgePoints.length / 650);
+        const compact = edgePoints.filter((_,i)=>i%stride===0);
+        edgePoints.length=0; edgePoints.push(...compact);
+      }
+
+      if (edgePoints.length >= 2) {
+        let best=-1, ai=0, bi=1;
+        const aspect=fh/Math.max(1,fw);
+        for (let i=0;i<edgePoints.length;i++) {
+          for (let j=i+1;j<edgePoints.length;j++) {
+            const dx=edgePoints[j].x-edgePoints[i].x;
+            const dy=(edgePoints[j].y-edgePoints[i].y)*aspect;
+            const d2=dx*dx+dy*dy;
+            if (d2>best){best=d2;ai=i;bi=j;}
+          }
+        }
+        longestPair={a:edgePoints[ai],b:edgePoints[bi]};
+      } else {
+        outlineReliable=false;
+      }
+    } catch (_) {
+      edgePoints.length = 0;
+      longestPair = null;
+    }
+
+    let outputSrc = '';
+    try {
+      outputSrc = finalCanvas.toDataURL('image/webp', 0.86);
+      if (!/^data:image\/webp/i.test(outputSrc)) outputSrc = finalCanvas.toDataURL('image/png');
+    } catch (_) {
+      outputSrc = finalCanvas.toDataURL('image/png');
     }
 
     return {
-      src: finalCanvas.toDataURL('image/png'),
+      src: outputSrc,
       width: finalCanvas.width,
       height: finalCanvas.height,
-      ratio: cropRatio
+      ratio: cropRatio,
+      edgePoints,
+      longestPair,
+      outlineReliable: !!outlineReliable && edgePoints.length >= 2,
+      cropped
     };
   }
 
@@ -1060,6 +1702,601 @@ pointer-events:none;
     return `${cm}cm ${rem}mm（${mm}mm）`;
   }
 
+  function isFreeMeasureImageMode() {
+    return state.freeMeasureEnabled && state.objectType === 'image';
+  }
+
+  function clearFreeMeasureSelection() {
+    state.freePointA = null;
+    state.freePointB = null;
+    state.freeSelectedMm = null;
+    state.freeRotationRad = 0;
+    state.freeInteractionMode = 'points';
+    state.freeHandleDragging = false;
+    state.freeHandleKey = null;
+    state.freeHandlePointerId = null;
+    state.freeHandleStartA = null;
+    state.freeHandleStartB = null;
+    state.freeAnswerShown = false;
+    state.pendingAnswerMm = null;
+    state.answerAttempts = 0;
+    if (typeof hideFreeAnswerPanel === 'function') hideFreeAnswerPanel();
+    if (typeof setResult === 'function') setResult('');
+  }
+
+  function getActiveLengthMm() {
+    if (isFreeMeasureImageMode() && state.freeSelectedMm != null) return state.freeSelectedMm;
+    return state.lengthMm;
+  }
+
+  function getRotatedBBox(w, h, angleRad) {
+    const c = Math.abs(Math.cos(angleRad));
+    const s = Math.abs(Math.sin(angleRad));
+    return {
+      w: Math.max(1, Math.round(w * c + h * s)),
+      h: Math.max(1, Math.round(w * s + h * c))
+    };
+  }
+
+  function rotatePointInBox(x, y, w, h, angleRad, bboxW, bboxH) {
+    const cx = w / 2;
+    const cy = h / 2;
+    const dx = x - cx;
+    const dy = y - cy;
+    const c = Math.cos(angleRad);
+    const s = Math.sin(angleRad);
+    return {
+      x: bboxW / 2 + dx * c - dy * s,
+      y: bboxH / 2 + dx * s + dy * c
+    };
+  }
+
+  function snapPointToImageEdge(point) {
+    if (!state.outlineSnapEnabled || !state.customImageVisual) return point;
+    const pts = state.customImageEdgePoints || [];
+    if (!pts.length) return point;
+
+    const v = state.customImageVisual;
+    const baseW = v.baseW || 1;
+    const baseH = v.baseH || 1;
+    // 拡大率にかかわらず、画面上およそ22px以内だけ吸着する。
+    // 高倍率で吸着が強すぎたり、低倍率で弱すぎたりしないようにする。
+    const z = Math.max(0.14, state.zoom);
+    const screenSnapPx = 22;
+    const threshold = Math.min(screenSnapPx / z, Math.min(baseW, baseH) * 0.11);
+    let best = null;
+    let bestD2 = threshold * threshold;
+
+    for (const n of pts) {
+      const x = n.x * baseW;
+      const y = n.y * baseH;
+      const dx = x - point.x;
+      const dy = y - point.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 <= bestD2) {
+        bestD2 = d2;
+        best = { x, y };
+      }
+    }
+    return best || point;
+  }
+
+  function challengeLengthRatio() {
+    if (!state.freePointA || !state.freePointB || !state.customImageLongestPair || !state.customImageVisual) return null;
+    const v = state.customImageVisual;
+    const selected = Math.hypot(state.freePointB.x - state.freePointA.x, state.freePointB.y - state.freePointA.y);
+    const lp = state.customImageLongestPair;
+    const ax = lp.a.x * v.baseW, ay = lp.a.y * v.baseH;
+    const bx = lp.b.x * v.baseW, by = lp.b.y * v.baseH;
+    const longest = Math.hypot(bx - ax, by - ay);
+    if (longest <= 0) return null;
+    return selected / longest;
+  }
+
+  function showLongestChallengeFeedback() {
+    if (!state.longestChallenge) return;
+    const ratio = challengeLengthRatio();
+    if (ratio == null) {
+      showToast('このえでは、いちばん長いところは きめられないよ。すきなところを はかってね。', 3200);
+      return;
+    }
+    if (ratio >= 0.97) {
+      showToast('かなり長いところを 見つけたね！', 3600);
+      speak('かなり長いところを見つけたね');
+    } else if (ratio >= 0.90) {
+      showToast('おしい！ もう少し長いところが ありそうだよ。', 3800);
+    } else {
+      showToast('もっと長いところが ありそうだよ。よく見てみよう。', 4000);
+    }
+  }
+
+  function buildFreeSelection(a, b, canonicalize = false) {
+    let aa = { x:a.x, y:a.y };
+    let bb = { x:b.x, y:b.y };
+    let dx = bb.x - aa.x;
+    let dy = bb.y - aa.y;
+    const dist = Math.hypot(dx, dy);
+    // 1mm未満だけ無効。同一点の誤タップを防ぎつつ、短い長さも測れるようにする。
+    if (dist < PX_PER_MM) return null;
+
+    let angleRad = -Math.atan2(dy, dx);
+    // 常に回転量を±90°以内にし、回転後は青点が左・赤点が右になるよう役割を整理する。
+    if (canonicalize) {
+      if (angleRad > Math.PI / 2) {
+        angleRad -= Math.PI;
+        [aa, bb] = [bb, aa];
+      } else if (angleRad < -Math.PI / 2) {
+        angleRad += Math.PI;
+        [aa, bb] = [bb, aa];
+      }
+      dx = bb.x - aa.x;
+      dy = bb.y - aa.y;
+    }
+
+    // 画像倍率は絶対に変えない。実際の2点間距離を、最も近い1mm目盛りで読む。
+    const mm = Math.max(1, Math.min(RULER_MM, Math.round(dist / PX_PER_MM)));
+    return { a:aa, b:bb, mm, actualPx:dist, angleRad };
+  }
+
+  const FREE_ADJUST_MS = 520;
+  let freeAdjustTimer = null;
+
+  function beginFreeAdjustmentAnimation() {
+    state.freeAdjustmentAnimating = true;
+    if (freeAdjustTimer) clearTimeout(freeAdjustTimer);
+    freeAdjustTimer = setTimeout(() => {
+      state.freeAdjustmentAnimating = false;
+      freeAdjustTimer = null;
+      updateSurfaceStatus();
+    }, FREE_ADJUST_MS + 40);
+  }
+
+  function animateFreeImageRotation(fromAngle, toAngle) {
+    const layer = objectBody.querySelector('.custom-image-rot-layer');
+    if (!layer || !layer.animate || Math.abs(toAngle - fromAngle) < 0.002) return;
+    layer.animate([
+      { transform: `rotate(${fromAngle}rad)` },
+      { transform: `rotate(${toAngle}rad)` }
+    ], {
+      duration: FREE_ADJUST_MS,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+    });
+  }
+
+  function animateRulerTo(left, top, fromLeft = state.rulerLeft, fromTop = state.rulerTop) {
+    const startLeft = fromLeft;
+    const startTop = fromTop;
+    state.rulerLeft = Math.max(0, left);
+    state.rulerTop = Math.max(0, top);
+    updateRulerPosition();
+
+    const dx = startLeft - state.rulerLeft;
+    const dy = startTop - state.rulerTop;
+    if (rulerWrap.animate && (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5)) {
+      rulerWrap.animate([
+        { transform: `translate(${dx}px, ${dy}px)` },
+        { transform: 'translate(0px, 0px)' }
+      ], {
+        duration: FREE_ADJUST_MS,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+      });
+    }
+  }
+
+  function animateStageScrollTo(left, top, duration = FREE_ADJUST_MS) {
+    const startLeft = stage.scrollLeft;
+    const startTop = stage.scrollTop;
+    const endLeft = Math.max(0, left);
+    const endTop = Math.max(0, top);
+    const dx = endLeft - startLeft;
+    const dy = endTop - startTop;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const ease = 1 - Math.pow(1 - t, 3);
+      stage.scrollLeft = startLeft + dx * ease;
+      stage.scrollTop = startTop + dy * ease;
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function applyFreeSelection(q, moveRuler = true) {
+    if (!q) return false;
+    const previousAngle = state.freeRotationRad || 0;
+    const previousRulerLeft = state.rulerLeft;
+    const previousRulerTop = state.rulerTop;
+
+    state.freePointA = q.a;
+    state.freePointB = q.b;
+    state.freeSelectedMm = q.mm;
+    state.freeRotationRad = q.angleRad;
+    state.snapped = false;
+    state.snapLocked = false;
+    state.snapSuspended = false;
+
+    beginFreeAdjustmentAnimation();
+    syncObjectLayout(true);
+    animateFreeImageRotation(previousAngle, q.angleRad);
+    if (moveRuler) {
+      positionRulerNearFreeMeasure({
+        animate: true,
+        fromLeft: previousRulerLeft,
+        fromTop: previousRulerTop
+      });
+    }
+    requestAnimationFrame(() => keepFreeSelectionInView(true));
+    updateSurfaceStatus();
+    return true;
+  }
+
+  function positionRulerNearFreeMeasure(options = {}) {
+    const { animate = false, fromLeft = state.rulerLeft, fromTop = state.rulerTop } = options;
+    const target = snapTarget();
+    // 0合わせをアプリがほぼ代行しないよう、横方向は画面上で十分離して出す。
+    // 縦方向は選んだ線の近くに置き、実物にものさしを当てる感覚を保つ。
+    const desiredDx = 92 / Math.max(0.14, state.zoom);
+    const desiredDy = 22 / Math.max(0.14, state.zoom);
+    const nextLeft = Math.max(0, target.x - desiredDx);
+    const nextTop = Math.max(0, target.y + desiredDy);
+    if (animate) animateRulerTo(nextLeft, nextTop, fromLeft, fromTop);
+    else {
+      state.rulerLeft = nextLeft;
+      state.rulerTop = nextTop;
+      updateRulerPosition();
+    }
+    updateCanvasSize();
+    updateSurfaceStatus();
+  }
+
+  function applyAutoZoom(targetZoom) {
+    const target = Math.max(0.14, Math.min(1.8, targetZoom));
+    if (state.autoZoomRestore == null) state.autoZoomRestore = state.zoom;
+    if (target > state.zoom + 0.01) changeZoom(target, { auto:true });
+  }
+
+  function restoreAutoZoom() {
+    if (state.autoZoomRestore == null) return;
+    const restore = state.autoZoomRestore;
+    state.autoZoomRestore = null;
+    state.zoom = Math.max(0.14, Math.min(1.8, Math.round(restore * 100) / 100));
+    updateZoomUI();
+    updateCanvasSize();
+  }
+
+  function keepFreeSelectionInView(animate = false) {
+    if (!isFreeMeasureImageMode() || !state.customImageVisual) return;
+    const z = Math.max(0.14, state.zoom);
+    const vp = stage;
+    const margin = 54;
+    const left = state.objectX * z;
+    const top = state.objectY * z;
+    const right = (state.objectX + state.objectW) * z;
+    const bottom = (state.objectY + state.objectH) * z;
+    const viewLeft = vp.scrollLeft;
+    const viewTop = vp.scrollTop;
+    const viewRight = viewLeft + vp.clientWidth;
+    const viewBottom = viewTop + vp.clientHeight;
+
+    let nextLeft = viewLeft;
+    let nextTop = viewTop;
+    if (left < viewLeft + margin) nextLeft = Math.max(0, left - margin);
+    else if (right > viewRight - margin) nextLeft = Math.max(0, right - vp.clientWidth + margin);
+    if (top < viewTop + margin) nextTop = Math.max(0, top - margin);
+    else if (bottom > viewBottom - margin) nextTop = Math.max(0, bottom - vp.clientHeight + margin);
+
+    if (animate) animateStageScrollTo(nextLeft, nextTop);
+    else {
+      vp.scrollLeft = nextLeft;
+      vp.scrollTop = nextTop;
+    }
+  }
+
+  function focusShortFreeSelection() {
+    if (!isFreeMeasureImageMode() || state.freeSelectedMm == null || state.freeSelectedMm > 4) return;
+    const abs = getFreeMeasureAbsolutePoints();
+    if (!abs) return;
+    const dist = Math.max(1, Math.hypot(abs.b.x - abs.a.x, abs.b.y - abs.a.y));
+    // 1〜4mmは通常倍率だと指で微調整しづらいので、表示だけを拡大する。
+    // 画像そのものの教材上の長さは変えない。
+    const desiredScreenPx = 58;
+    const targetZoom = Math.min(1.8, Math.max(state.zoom, desiredScreenPx / dist));
+    if (targetZoom > state.zoom + 0.04) {
+      applyAutoZoom(targetZoom);
+      // snapTarget の縦余白は画面px基準なので、新しい倍率で定規位置も計算し直す。
+      positionRulerNearFreeMeasure({ animate:true });
+    }
+
+    const midX = ((abs.a.x + abs.b.x) / 2) * state.zoom;
+    const midY = ((abs.a.y + abs.b.y) / 2) * state.zoom;
+    animateStageScrollTo(
+      Math.max(0, midX - stage.clientWidth * 0.48),
+      Math.max(0, midY - stage.clientHeight * 0.36)
+    );
+    showHint('みじかいところだから、おおきくしたよ。丸をうごかして あわせよう。', 3200);
+  }
+
+  function zoomNearFirstFreePoint() {
+    if (!isFreeMeasureImageMode() || !state.freePointA || state.freePointB) return;
+    const targetZoom = Math.max(state.zoom, 0.95);
+    if (targetZoom > state.zoom + 0.01) applyAutoZoom(targetZoom);
+
+    const ax = (state.objectX + state.freePointA.x) * state.zoom;
+    const ay = (state.objectY + state.freePointA.y) * state.zoom;
+    stage.scrollLeft = Math.max(0, ax - stage.clientWidth * 0.42);
+    stage.scrollTop = Math.max(0, ay - stage.clientHeight * 0.40);
+    showHint('1mmも見やすくしたよ。2つめの点を えらぼう。', 3200);
+  }
+
+  function getFreeMeasureAbsolutePoints() {
+    if (!isFreeMeasureImageMode() || !state.freePointA || !state.freePointB || !state.customImageVisual) return null;
+    const v = state.customImageVisual;
+    const aObj = rotatePointInBox(state.freePointA.x, state.freePointA.y, v.baseW, v.baseH, v.angleRad || 0, v.bboxW, v.bboxH);
+    const bObj = rotatePointInBox(state.freePointB.x, state.freePointB.y, v.baseW, v.baseH, v.angleRad || 0, v.bboxW, v.bboxH);
+    return {
+      a: { x: state.objectX + aObj.x, y: state.objectY + aObj.y },
+      b: { x: state.objectX + bObj.x, y: state.objectY + bObj.y },
+      lengthPx: (state.freeSelectedMm || 0) * PX_PER_MM
+    };
+  }
+
+  function getPointerLocalOnImage(e) {
+    if (!state.customImageVisual) return null;
+    const rect = objectWrap.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+
+    const objX = ((e.clientX - rect.left) / rect.width) * state.objectW;
+    const objY = ((e.clientY - rect.top) / rect.height) * state.objectH;
+    const v = state.customImageVisual;
+    const localRotX = objX - ((v.bboxW - v.baseW) / 2);
+    const localRotY = objY - ((v.bboxH - v.baseH) / 2);
+    const cx = v.baseW / 2;
+    const cy = v.baseH / 2;
+    const dx = localRotX - cx;
+    const dy = localRotY - cy;
+    const ang = -(v.angleRad || 0);
+    const c = Math.cos(ang);
+    const si = Math.sin(ang);
+    const x = cx + dx * c - dy * si;
+    const y = cy + dx * si + dy * c;
+
+    if (x < 0 || y < 0 || x > v.baseW || y > v.baseH) return null;
+    return { x, y };
+  }
+
+  function formatFreeModeLengthText() {
+    if (!isFreeMeasureImageMode()) return fmtLength(getActiveLengthMm());
+    if (state.freeSelectedMm == null) return '点を2つえらぶ';
+    return state.freeAnswerShown ? fmtLength(state.freeSelectedMm) : '？';
+  }
+
+  function syncObjectLayout(clearMeasureOverlay = false) {
+    const centerX = state.objectX + state.objectW / 2;
+    const centerY = state.objectY + state.objectH / 2;
+    buildObject(state.objectType, state.lengthMm);
+
+    // 回転で外接矩形が変わっても、画像の中心は画面上で動かさない。
+    state.objectX = centerX - state.objectW / 2;
+    state.objectY = centerY - state.objectH / 2;
+
+    objectWrap.style.left = `${state.objectX}px`;
+    objectWrap.style.top = `${state.objectY}px`;
+    objectWrap.style.width = `${state.objectW}px`;
+    objectWrap.style.height = `${state.objectH}px`;
+    state.rulerTop = state.objectY + state.objectH + 120;
+    applyRulerType();
+    updateRulerPosition();
+    updateCanvasSize();
+    updateSurfaceStatus();
+    if (clearMeasureOverlay) clearOverlay();
+  }
+
+  function getMeasurementSpec() {
+    const objRect = getObjectSurfaceRect();
+    if (isFreeMeasureImageMode() && state.freePointA && state.freePointB && state.freeSelectedMm != null) {
+      const abs = getFreeMeasureAbsolutePoints();
+      if (abs) {
+        const st = snapTarget();
+        const actualPx = Math.hypot(abs.b.x - abs.a.x, abs.b.y - abs.a.y);
+        const rawMm = actualPx / PX_PER_MM;
+        const rulerReadPx = state.freeSelectedMm * PX_PER_MM;
+        const frac = rawMm - Math.floor(rawMm);
+        const acceptedMms = (frac >= 0.45 && frac <= 0.55)
+          ? [...new Set([Math.max(1, Math.floor(rawMm)), Math.min(RULER_MM, Math.ceil(rawMm))])]
+          : [state.freeSelectedMm];
+        return {
+          objRect,
+          startX: abs.a.x,
+          targetY: st.y,
+          pointA: abs.a,
+          pointB: abs.b,
+          totalPx: actualPx,
+          rulerReadPx,
+          pxPerMm: PX_PER_MM,
+          freeApprox: true,
+          rawMm,
+          acceptedMms,
+          lengthMm: state.freeSelectedMm,
+          regionLeft: Math.min(abs.a.x, abs.b.x),
+          regionRight: Math.max(abs.a.x + rulerReadPx, abs.b.x),
+          regionTop: Math.min(objRect.y, abs.a.y - 60),
+          regionBottom: Math.max(objRect.y + objRect.h, st.y)
+        };
+      }
+    }
+
+    const lengthMm = state.lengthMm;
+    const pxPerMmReal = state.rulerType === 'plastic' ? PX_PER_MM_PLASTIC : state.objectW / Math.max(1, state.lengthMm);
+    return {
+      objRect,
+      startX: objRect.x,
+      targetY: objRect.y + objRect.h,
+      pointA: null,
+      pointB: null,
+      totalPx: pxPerMmReal * lengthMm,
+      rulerReadPx: pxPerMmReal * lengthMm,
+      pxPerMm: pxPerMmReal,
+      freeApprox: false,
+      rawMm: lengthMm,
+      acceptedMms: [lengthMm],
+      lengthMm,
+      regionLeft: objRect.x,
+      regionRight: objRect.x + pxPerMmReal * lengthMm,
+      regionTop: objRect.y,
+      regionBottom: objRect.y + objRect.h
+    };
+  }
+
+  function handleFreeMeasureTap(e) {
+    if (state.objectType !== 'image') {
+      showToast('「じゆうにはかる」は、えのもんだいで つかえるよ。', 2200);
+      return;
+    }
+
+    let point = getPointerLocalOnImage(e);
+    if (!point) {
+      showToast('えの上を おしてね。', 1600);
+      return;
+    }
+    point = snapPointToImageEdge(point);
+
+    if (state.freePointA && state.freePointB) {
+      showHint('なおすときは、青い丸・赤い丸を うごかそう。', 2200);
+      showToast('2つの点は きまったよ。なおすなら、丸をうごかすか「えらびなおす」を おしてね。', 2800);
+      return;
+    }
+
+    if (!state.freePointA) {
+      state.freePointA = point;
+      state.freePointB = null;
+      state.freeSelectedMm = null;
+      state.freeRotationRad = 0;
+      state.snapped = false;
+      state.snapLocked = false;
+      state.snapSuspended = false;
+      syncObjectLayout(true);
+      showToast('つぎは、2つめの点を おしてね。', 2200);
+      beep(760, 60, 'triangle', 0.03);
+      return;
+    }
+
+    const q = buildFreeSelection(state.freePointA, point, true);
+    if (!q) {
+      showToast('ちかすぎるよ。1mmいじょう はなして えらんでね。', 2400);
+      return;
+    }
+
+    applyFreeSelection(q, true);
+    showToast('2つの はしが きまったよ。左を0にして、まっすぐにするね…', 1200);
+    setTimeout(() => {
+      focusShortFreeSelection();
+      showToast('まっすぐになったよ。青い点の下に、ものさしの0を あわせよう。', 3000);
+      showHint('青い点の下に 0 を あわせよう。', 2600);
+      beep(880, 80, 'triangle', 0.04);
+    }, FREE_ADJUST_MS);
+  }
+
+  function startFreeHandleDrag(key, e) {
+    if (!isFreeMeasureImageMode() || !state.freePointA || !state.freePointB) return;
+    e.preventDefault();
+    e.stopPropagation();
+    state.freeHandleDragging = true;
+    state.freeHandleKey = key;
+    state.freeHandlePointerId = e.pointerId;
+    state.freeHandleStartA = { ...state.freePointA };
+    state.freeHandleStartB = { ...state.freePointB };
+    try { objectWrap.setPointerCapture(state.freeHandlePointerId); } catch (_) {}
+    state.snapped = false;
+    state.snapLocked = false;
+    state.snapSuspended = false;
+    clearOverlay();
+    setResult('');
+    updateSurfaceStatus();
+  }
+
+  function updateFreeHandlePreviewDom() {
+    const svg = objectBody.querySelector('.free-measure-svg');
+    if (!svg || !state.freePointA || !state.freePointB) return;
+    const a = state.freePointA, b = state.freePointB;
+    const seg = svg.querySelector('.free-segment-line');
+    if (seg) { seg.setAttribute('x1', a.x); seg.setAttribute('y1', a.y); seg.setAttribute('x2', b.x); seg.setAttribute('y2', b.y); }
+    const invZ = 1 / Math.max(0.14, state.zoom);
+    const labelOffset = 30 * invZ;
+    const labelSize = 18 * invZ;
+    for (const [key,pt] of [['a',a],['b',b]]) {
+      svg.querySelectorAll(`[data-free-handle="${key}"]`).forEach(el => {
+        if (el.tagName.toLowerCase() === 'circle') { el.setAttribute('cx', pt.x); el.setAttribute('cy', pt.y); }
+        if (el.tagName.toLowerCase() === 'text') {
+          const ty = Math.max(labelSize*1.2, pt.y-labelOffset);
+          const v = state.customImageVisual;
+          const counterDeg = v ? -((v.angleRad || 0) * 180 / Math.PI) : 0;
+          el.setAttribute('x', pt.x); el.setAttribute('y', ty);
+          el.setAttribute('transform', `rotate(${counterDeg} ${pt.x} ${ty})`);
+        }
+      });
+    }
+  }
+
+  function moveFreeHandle(e) {
+    if (!state.freeHandleDragging || !isFreeMeasureImageMode()) return;
+    let point = getPointerLocalOnImage(e);
+    if (!point) return;
+    point = snapPointToImageEdge(point);
+
+    const other = state.freeHandleKey === 'a' ? state.freePointB : state.freePointA;
+    if (!other || Math.hypot(point.x-other.x, point.y-other.y) < PX_PER_MM) return;
+
+    // ドラッグ中は画像を回さない。丸と線だけを追従させ、指を離した時に一度だけ回転する。
+    if (state.freeHandleKey === 'a') state.freePointA = point;
+    else state.freePointB = point;
+    state.freeSelectedMm = Math.max(1, Math.min(RULER_MM, Math.round(Math.hypot(state.freePointB.x-state.freePointA.x, state.freePointB.y-state.freePointA.y)/PX_PER_MM)));
+    updateFreeHandlePreviewDom();
+  }
+
+  function endFreeHandleDrag() {
+    if (!state.freeHandleDragging) return;
+    if (state.freeHandlePointerId !== null) {
+      try { objectWrap.releasePointerCapture(state.freeHandlePointerId); } catch (_) {}
+    }
+    state.freeHandleDragging = false;
+    state.freeHandleKey = null;
+    state.freeHandlePointerId = null;
+
+    const q = buildFreeSelection(state.freePointA, state.freePointB, true);
+    if (!q) {
+      state.freePointA = state.freeHandleStartA;
+      state.freePointB = state.freeHandleStartB;
+      const restore = buildFreeSelection(state.freePointA, state.freePointB, true);
+      if (restore) applyFreeSelection(restore, true);
+    } else {
+      applyFreeSelection(q, true);
+      focusShortFreeSelection();
+    }
+    state.freeHandleStartA = null;
+    state.freeHandleStartB = null;
+    showToast('点にあわせて、まっすぐにするね…', 1000);
+    setTimeout(() => showToast('できたよ。青い点の下に、ものさしの0を あわせよう。', 2200), FREE_ADJUST_MS);
+  }
+
+  function ensureFreeMeasureVisibility() {
+    if (!isFreeMeasureImageMode() || !state.objectW || !state.objectH) return;
+    const longSide = Math.max(state.objectW, state.objectH);
+    const shortSide = Math.max(1, Math.min(state.objectW, state.objectH));
+    const needed = Math.max(280 / longSide, 95 / shortSide);
+    const vpW = Math.max(1, stage.clientWidth);
+    const vpH = Math.max(1, stage.clientHeight);
+    const fit = Math.min(0.65, vpW / (state.objectW * 1.30), vpH / (state.objectH * 1.75));
+    const target = Math.max(state.zoom, Math.min(fit, Math.max(0.20, needed)));
+    if (target > state.zoom + 0.025) {
+      applyAutoZoom(Math.round(target * 100) / 100);
+    }
+    const cx = (state.objectX + state.objectW / 2) * state.zoom;
+    const cy = (state.objectY + state.objectH / 2) * state.zoom;
+    stage.scrollLeft = Math.max(0, cx - stage.clientWidth * 0.42);
+    stage.scrollTop = Math.max(0, cy - stage.clientHeight * 0.30);
+  }
+
   function formatObjectLabel(type) {
     if (type === 'image') return '画像';
     return objectKinds.find(o => o.key === type)?.label ?? '対象';
@@ -1067,16 +2304,21 @@ pointer-events:none;
 
   function updateZoomUI() {
     stage.style.setProperty('--zoom', String(state.zoom));
+    stage.style.setProperty('--stage-ui-inv', String(1 / Math.max(0.14, state.zoom)));
     stageSpacer.style.width = `${CANVAS_W * state.zoom}px`;
     stageSpacer.style.height = `${CANVAS_H * state.zoom}px`;
-    zoomText.textContent = `拡大 ${Math.round(state.zoom * 100)}%`;
+    zoomText.textContent = `大きさ ${Math.round(state.zoom * 100)}%`;
+    if (state.measuring && typeof rescaleMeasurementOverlay === 'function') rescaleMeasurementOverlay();
+    if (typeof updateRulerTextScale === 'function') updateRulerTextScale();
   }
 
   // オブジェクトサイズに合わせてキャンバス高さとoverlayのviewBoxを動的に更新
   function updateCanvasSize() {
     // オブジェクト下端 + 物差し高さ + 余白200px が収まるように
     const rulerH = state.rulerType === 'plastic' ? PLASTIC_RULER_HEIGHT : RULER_HEIGHT;
-    const needed = state.objectY + state.objectH + rulerH + 200;
+    const objectBottom = state.objectY + state.objectH;
+    const rulerBottom = state.rulerTop + rulerH;
+    const needed = Math.max(objectBottom, rulerBottom) + 200;
     CANVAS_H = Math.max(CANVAS_H_BASE, needed);
 
     // stage-surface と stageSpacer の高さを更新
@@ -1087,19 +2329,161 @@ pointer-events:none;
 
     // measureOverlay の viewBox を更新（SVG座標系をキャンバスに合わせる）
     measureOverlay.setAttribute('viewBox', `0 0 ${CANVAS_W} ${CANVAS_H}`);
+    if (freeAlignmentOverlay) freeAlignmentOverlay.setAttribute('viewBox', `0 0 ${CANVAS_W} ${CANVAS_H}`);
+    if (typeof renderFreeAlignmentGuides === 'function') renderFreeAlignmentGuides();
+  }
+
+  function getFreeGuideState() {
+    if (!isFreeMeasureImageMode()) return null;
+    if (state.measuring) return { step: '4', title: '目盛りを読もう', sub: '見えにくければ＋／－で拡大し、画面をドラッグして見たい場所へ動かせるよ。' };
+    if (state.freeAdjustmentAnimating) return { step: '↻', title: 'まっすぐにしています…', sub: 'はかるところと、ものさしの位置を整えているよ。' };
+    if (state.freeInteractionMode === 'move') return { step: '↔', title: '画像をうごかせるよ', sub: '終わったら「点をえらぶ」に戻そう。' };
+    if (!state.freePointA) return { step: '1', title: '1つめの はしをタップ', sub: state.longestChallenge ? 'いちばん長そうなところの、はしを1つえらぼう。' : 'はかりたいところの、はしを1つえらぼう。' };
+    if (!state.freePointB) return { step: '2', title: 'もう一方の はしをタップ', sub: '近い2点を細かく選ぶときは「近くを拡大」も使えるよ。' };
+    if (!state.snapped) return { step: '3', title: '0を青い点の真下へ', sub: 'ものさしを動かして、0の位置を青い点にそろえよう。' };
+    return { step: '4', title: '「④ はかる！」を押そう', sub: '赤い線にいちばん近い目盛りを、先に自分で読んでみよう。' };
+  }
+
+  function updateFreeGuideUI() {
+    const visible = isFreeMeasureImageMode();
+    if (freeGuide) freeGuide.classList.toggle('visible', visible);
+    const floatingNote = document.querySelector('.floating-note');
+    if (floatingNote) floatingNote.style.display = visible ? 'none' : '';
+    if (subtitleText) {
+      subtitleText.textContent = visible
+        ? 'はかりたい2点をえらんで、ものさしで長さを読もう'
+        : 'ものさしの「0」を、はかるものの ひだりはしに合わせて、cm と mm を読もう';
+    }
+    if (!visible) return;
+    const g = getFreeGuideState();
+    if (!g) return;
+    if (freeGuideStep) freeGuideStep.textContent = g.step;
+    if (freeGuideTitle) freeGuideTitle.textContent = g.title;
+    if (freeGuideSub) freeGuideSub.textContent = g.sub;
+    const numericStep = /^[1-4]$/.test(String(g.step)) ? Number(g.step) : (state.freePointB ? (state.snapped ? 4 : 3) : (state.freePointA ? 2 : 1));
+    if (freeGuide) freeGuide.dataset.step = String(numericStep);
+    document.querySelectorAll('[data-free-progress]').forEach(chip => {
+      const n = Number(chip.getAttribute('data-free-progress'));
+      chip.classList.toggle('active', n === numericStep);
+      chip.classList.toggle('done', n < numericStep);
+    });
+  }
+
+  function renderFreeAlignmentGuides() {
+    if (!freeAlignmentOverlay) return;
+    freeAlignmentOverlay.innerHTML = '';
+    if (!isFreeMeasureImageMode() || state.measuring || state.freeHandleDragging || !state.freePointA || !state.freePointB || state.freeSelectedMm == null) return;
+    const abs = getFreeMeasureAbsolutePoints();
+    if (!abs) return;
+    const target = snapTarget();
+    const inv = 1 / Math.max(0.14, state.zoom);
+    const strokeW = 3 * inv;
+    const dashA = `${9 * inv} ${7 * inv}`;
+    const labelSize = 18 * inv;
+
+    [
+      {pt: abs.a, color:'#2563eb'},
+      {pt: abs.b, color:'#ef4444'}
+    ].forEach(({pt,color}) => {
+      const line = svgEl('line', {
+        x1:pt.x, y1:pt.y, x2:pt.x, y2:target.y,
+        stroke:color, 'stroke-width':strokeW, 'stroke-dasharray':dashA,
+        'stroke-linecap':'round', opacity:'0.78'
+      });
+      freeAlignmentOverlay.appendChild(line);
+    });
+
+    const ring = svgEl('circle', {
+      cx:abs.a.x, cy:target.y, r:12*inv, fill:'rgba(255,255,255,.92)',
+      stroke:'#2563eb', 'stroke-width':3*inv
+    });
+    freeAlignmentOverlay.appendChild(ring);
+    const zero = svgEl('text', {
+      x:abs.a.x, y:target.y - 18*inv, fill:'#1d4ed8',
+      'font-size':labelSize, 'font-weight':'900', 'text-anchor':'middle',
+      'paint-order':'stroke', stroke:'white', 'stroke-width':4*inv
+    });
+    zero.textContent = '0をここへ';
+    freeAlignmentOverlay.appendChild(zero);
   }
 
   function updateSurfaceStatus() {
     objectText.textContent = state._customLabel || formatObjectLabel(state.objectType);
-    lengthText.textContent = fmtLength(state.lengthMm);
-    snapText.textContent = state.snapped ? 'スナップ中' : '未スナップ';
-    modeText.textContent = state.measuring ? '測定中' : (state.snapped ? '測定ボタンを押せます' : '待機中');
+    lengthText.textContent = formatFreeModeLengthText();
+
+    if (isFreeMeasureImageMode() && state.freeSelectedMm == null) {
+      snapText.textContent = '2点えらび中';
+    } else {
+      snapText.textContent = state.snapped ? 'スナップ中' : '未スナップ';
+    }
+
+    if (state.measuring) {
+      modeText.textContent = '測定中';
+    } else if (state.freeAdjustmentAnimating) {
+      modeText.textContent = 'まっすぐにしています';
+    } else if (isFreeMeasureImageMode() && state.freeInteractionMode === 'move') {
+      modeText.textContent = '画像を動かせる';
+    } else if (isFreeMeasureImageMode() && state.freePointA && state.freePointB && !state.snapped) {
+      modeText.textContent = '青い点の真下に0を合わせよう';
+    } else if (isFreeMeasureImageMode() && state.freeSelectedMm == null) {
+      modeText.textContent = '画像の2点をえらぼう';
+    } else {
+      modeText.textContent = state.snapped ? '測定ボタンを押せます' : '待機中';
+    }
+
+    objectWrap.classList.toggle('free-measure', isFreeMeasureImageMode() && !state.measuring);
+
+    if (isFreeMeasureImageMode()) {
+      const ready = !!(state.freePointA && state.freePointB && state.freeSelectedMm != null && state.snapped && !state.measuring && !state.freeAdjustmentAnimating);
+      measureBtn.disabled = !ready;
+      measureBtn.style.opacity = ready ? '1' : '0.52';
+      measureBtn.textContent = ready ? '④ はかる！' : '④ はかる';
+      measureBtn.classList.toggle('free-ready', ready);
+    } else {
+      measureBtn.disabled = false;
+      measureBtn.style.opacity = '1';
+      measureBtn.textContent = 'はかる！';
+      measureBtn.classList.remove('free-ready');
+    }
+
     // スナップ中かつ未測定のときだけ measureBtn をパルス
     measureBtn.classList.toggle('snapped-pulse', state.snapped && !state.measuring);
+    if (typeof refreshFreeMeasureBtn === 'function') refreshFreeMeasureBtn();
+    if (typeof refreshFreeActionUI === 'function') refreshFreeActionUI();
+    updateFreeGuideUI();
+    renderFreeAlignmentGuides();
+    applyMeasurementInteractionLock();
+  }
+
+  function applyMeasurementInteractionLock() {
+    // 測定中は「教材そのものを変える操作」だけ止める。
+    // 見るためのズーム・スクロール・手のひら移動は自由に使えるようにする。
+    const contentLocked = !!(state.measuring || state.freeAdjustmentAnimating);
+    const viewLocked = !!(state.freeAdjustmentAnimating || (state.measuring && !state.measureViewInteractive));
+
+    [newProblemBtn, resetBtn, modeBtn, rulerTypeBtn, readModeBtn, rerollPencilBtn, imageLoadBtn, loadFolderBtn]
+      .forEach(el => { if (el) el.disabled = contentLocked; });
+    [zoomOutBtn, zoomInBtn, zoomResetBtn]
+      .forEach(el => { if (el) el.disabled = viewLocked; });
+
+    if (hintToggle) hintToggle.disabled = contentLocked;
+    if (contentLocked) {
+      [freeMeasureBtn, precisionSelectBtn, freeActionBtn, clearFreeBtn, edgeSnapBtn, longestChallengeBtn].forEach(el => {
+        if (el) el.disabled = true;
+      });
+    }
+
+    stage.classList.toggle('measure-view-active', !!state.measuring && state.measureViewInteractive && !state.freeAdjustmentAnimating);
+    if (!state.measuring) {
+      state.measurePanActive = false;
+      stage.classList.remove('panning');
+    }
   }
 
   function setResult(html) {
     resultText.innerHTML = html;
+    resultText.classList.toggle('has-result', !!html);
+    if (isFreeMeasureImageMode()) state.freeAnswerShown = !!html;
   }
 
   function mmColor(mm) {
@@ -1111,14 +2495,14 @@ pointer-events:none;
     for (let mm = 0; mm < RULER_MM; mm++) {
       const x = mm * PX_PER_MM + 2;
       const fill = mmColor(mm);
-      /* 目盛り先端周辺だけ着色（高さ約4mm相当・不透明度100%） */
+      /* 目盛り先端周辺だけを薄く着色。色ではなく目盛り自体を読む学習へつなげる。 */
       hintHtml += `<rect
         x="${x}"
         y="0"
         width="${PX_PER_MM - 4}"
         height="68"
         fill="${fill}"
-        opacity="1">
+        opacity="0.38">
       </rect>`;
     }
     hintLayer.innerHTML = hintHtml;
@@ -1185,12 +2569,12 @@ pointer-events:none;
     const P = PX_PER_MM_PLASTIC;     // 17
     const TOTAL_MM = RULER_MM;       // 300
 
-    // ── ヒント着色帯 ──
+    // ── ヒント着色帯（薄め。目盛り自体を読むことを優先）──
     let hintHtml = '';
     for (let mm = 0; mm < TOTAL_MM; mm++) {
       const x = OFF + mm * P;
       const fill = mmColor(mm);
-      hintHtml += `<rect x="${x}" y="0" width="${P - 2}" height="58" fill="${fill}" opacity="1"/>`;
+      hintHtml += `<rect x="${x}" y="0" width="${P - 2}" height="58" fill="${fill}" opacity="0.38"/>`;
     }
     plasticHintLayer.innerHTML = hintHtml;
 
@@ -1229,10 +2613,22 @@ pointer-events:none;
       labelHtml += `<text x="${x}" y="108" text-anchor="middle" font-size="${fontSize}" font-weight="800">${cm}</text>`;
     }
     plasticCmLabels.innerHTML = labelHtml;
+    updateRulerTextScale();
 
     applyHintToggle();
   }
   // ── /プラスチックものさし ─────────────────────────
+
+  function updateRulerTextScale() {
+    // ステージ倍率が小さくても、プラものさしのcm数字は画面上で約17pxを保つ。
+    const fontSize = Math.max(9, Math.min(100, 17 / Math.max(0.14, state.zoom)));
+    if (plasticCmLabels) {
+      plasticCmLabels.querySelectorAll('text').forEach(el => {
+        el.setAttribute('font-size', String(fontSize));
+        el.setAttribute('font-weight', '900');
+      });
+    }
+  }
 
   function buildObjectSvg(type, lengthMm) {
     const lengthPx = lengthMm * PX_PER_MM;
@@ -1245,37 +2641,69 @@ pointer-events:none;
           <div class="eraser-body">
             <div class="eraser-cap"></div>
             <div class="eraser-top"></div>
-            <div class="eraser-mid">MONO</div>
-            <div class="eraser-bottom"><span>Tombow</span></div>
+            <div class="eraser-mid"></div>
+            <div class="eraser-bottom"></div>
           </div>
         </div>
       `;
     }
 
     if (type === 'image') {
-      state.objectW = lengthPx;
-      state.objectH = Math.round(lengthPx * (state.customImageRatio || 0.75));
       const src = state.customImageSrc;
-      const fitW = lengthPx;
-      const fitH = state.objectH;
-      const offsetX = 0;
-      const offsetY = 0;
-      state.customImageFit = { fitW, fitH, offsetX, offsetY };
+      const baseW = lengthPx;
+      const baseH = Math.round(lengthPx * (state.customImageRatio || 0.75));
+      const freeReady = isFreeMeasureImageMode() && state.freePointA && state.freePointB && state.freeSelectedMm != null;
+      const angleRad = freeReady ? state.freeRotationRad : 0;
+      const bbox = getRotatedBBox(baseW, baseH, angleRad);
+      const offsetX = Math.round((bbox.w - baseW) / 2);
+      const offsetY = Math.round((bbox.h - baseH) / 2);
+
+      state.objectW = bbox.w;
+      state.objectH = bbox.h;
+      state.customImageFit = { fitW: baseW, fitH: baseH, offsetX, offsetY, bboxW: bbox.w, bboxH: bbox.h, angleRad };
+      state.customImageVisual = { x: offsetX, y: offsetY, w: baseW, h: baseH, baseW, baseH, bboxW: bbox.w, bboxH: bbox.h, angleRad };
 
       if (!src) {
         state.customImageVisual = null;
         return `
-          <div class="custom-image-object" style="width:${lengthPx}px;height:${state.objectH}px;">
+          <div class="custom-image-object" style="width:${bbox.w}px;height:${bbox.h}px;">
             <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;border:2px dashed rgba(37,99,235,.55);border-radius:18px;background:rgba(255,255,255,.72);font-weight:800;color:#1d4ed8;">
               画像を読み込んでください
             </div>
           </div>
         `;
       }
-      state.customImageVisual = { x: 0, y: 0, w: lengthPx, h: state.objectH };
+
+      let guideSvg = '';
+      if (state.freeMeasureEnabled) {
+        const a = state.freePointA;
+        const b = state.freePointB;
+        // ステージ全体のズームに負けないよう、画面上の端点サイズをほぼ一定に保つ。
+        const invZ = 1 / Math.max(0.14, state.zoom);
+        const handleR = 15 * invZ;
+        const hitR = 28 * invZ;
+        const handleStroke = 4 * invZ;
+        const guideStroke = 5 * invZ;
+        const labelSize = 14 * invZ;
+        const labelOffset = 24 * invZ;
+        const labelStroke = 3.5 * invZ;
+        const counterDeg = -(angleRad * 180 / Math.PI);
+        guideSvg = `
+          <svg class="free-measure-svg" viewBox="0 0 ${baseW} ${baseH}" aria-hidden="true">
+            ${a && b ? `<line class="free-segment-line" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#facc15" stroke-width="${guideStroke}" stroke-linecap="round" opacity="0.95"></line>` : ''}
+            ${a && !b ? `<circle cx="${a.x}" cy="${a.y}" r="${handleR}" fill="#f59e0b" stroke="#ffffff" stroke-width="${handleStroke}"></circle><text x="${a.x}" y="${Math.max(labelSize*1.2, a.y - labelOffset)}" text-anchor="middle" font-size="${labelSize}" font-weight="900" fill="#b45309" stroke="#ffffff" stroke-width="${labelStroke}" paint-order="stroke">① 1つめのはし</text>` : ''}
+            ${a && b ? `<circle class="free-handle-hit" data-free-handle="a" cx="${a.x}" cy="${a.y}" r="${hitR}" fill="rgba(37,99,235,0.001)"></circle><circle class="free-handle" data-free-handle="a" cx="${a.x}" cy="${a.y}" r="${handleR}" fill="#2563eb" stroke="#ffffff" stroke-width="${handleStroke}"></circle><text class="free-handle-label" data-free-handle="a" x="${a.x}" y="${Math.max(labelSize*1.2, a.y - labelOffset)}" transform="rotate(${counterDeg} ${a.x} ${Math.max(labelSize*1.2, a.y - labelOffset)})" text-anchor="middle" font-size="${labelSize}" font-weight="900" fill="#1d4ed8" stroke="#ffffff" stroke-width="${labelStroke}" paint-order="stroke">0の点</text>` : ''}
+            ${b ? `<circle class="free-handle-hit" data-free-handle="b" cx="${b.x}" cy="${b.y}" r="${hitR}" fill="rgba(239,68,68,0.001)"></circle><circle class="free-handle" data-free-handle="b" cx="${b.x}" cy="${b.y}" r="${handleR}" fill="#ef4444" stroke="#ffffff" stroke-width="${handleStroke}"></circle><text class="free-handle-label" data-free-handle="b" x="${b.x}" y="${Math.max(labelSize*1.2, b.y - labelOffset)}" transform="rotate(${counterDeg} ${b.x} ${Math.max(labelSize*1.2, b.y - labelOffset)})" text-anchor="middle" font-size="${labelSize}" font-weight="900" fill="#b91c1c" stroke="#ffffff" stroke-width="${labelStroke}" paint-order="stroke">ここまで</text>` : ''}
+          </svg>
+        `;
+      }
+
       return `
-        <div class="custom-image-object" style="width:${lengthPx}px;height:${state.objectH}px;position:relative;overflow:hidden;">
-          <img src="${src}" alt="読み込んだ画像" style="position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;display:block;">
+        <div class="custom-image-object" style="width:${bbox.w}px;height:${bbox.h}px;position:relative;overflow:visible;">
+          <div class="custom-image-rot-layer" style="left:${offsetX}px;top:${offsetY}px;width:${baseW}px;height:${baseH}px;transform:rotate(${angleRad}rad);">
+            <img src="${src}" alt="読み込んだ画像">
+            ${guideSvg}
+          </div>
         </div>
       `;
     }
@@ -1283,9 +2711,10 @@ pointer-events:none;
     if (type === 'button') {
       state.objectW = lengthPx;
       state.objectH = 140;
-      const r = Math.max(20, Math.round(lengthPx * 0.48));
-      const cx = Math.round(lengthPx / 2);
-      const cy = 70;
+      // 左端・下端にぴったり沿うように配置し、0の点が空白に出ないようにする。
+      const r = Math.round(lengthPx / 2);
+      const cx = r;
+      const cy = state.objectH - r;
       return `
         <svg class="pencil-svg" viewBox="0 0 ${lengthPx} ${state.objectH}" preserveAspectRatio="none" aria-hidden="true">
           <defs>
@@ -1304,7 +2733,6 @@ pointer-events:none;
           <circle cx="${cx - r * 0.32}" cy="${cy - r * 0.16}" r="${Math.max(4, r * 0.11)}" fill="#1d4ed8"></circle>
           <circle cx="${cx + r * 0.14}" cy="${cy + r * 0.08}" r="${Math.max(4, r * 0.11)}" fill="#1d4ed8"></circle>
           <circle cx="${cx - r * 0.02}" cy="${cy + r * 0.30}" r="${Math.max(4, r * 0.11)}" fill="#1d4ed8"></circle>
-          <text x="${cx}" y="${cy + r + 24}" text-anchor="middle" font-size="28" font-weight="900" fill="#1f2937">ボタン</text>
         </svg>
       `;
     }
@@ -1349,6 +2777,14 @@ pointer-events:none;
     `;
   }
 
+  function clampImageLengthToRuler(lengthMm) {
+    const ratio = Math.max(0.01, Number(state.customImageRatio) || 0.75);
+    // 画像内のどの2点を選んでも30cm物差しに収まるよう、対角線を最大29cmに固定する。
+    const maxDiagMm = 290;
+    const maxWidthMm = Math.max(1, Math.floor(maxDiagMm / Math.sqrt(1 + ratio * ratio)));
+    return Math.max(1, Math.min(lengthMm, maxWidthMm));
+  }
+
   function randomLengthMm(type) {
     if (type === 'button') return 5;
 
@@ -1387,14 +2823,27 @@ pointer-events:none;
   }
 
   function setProblem(type, lengthMm, randomizePosition = false, customLabel = null) {
+    // 精密選択や短区間のために自動拡大した倍率だけ、次の問題へ持ち越さない。
+    restoreAutoZoom();
+    const previousType = state.objectType;
     state.currentProblemId += 1;
     state.objectType = type;
+    if (type === 'image') lengthMm = clampImageLengthToRuler(lengthMm);
     state.lengthMm = lengthMm;
+    // 最長チャレンジは問題ごとにOFF。自由測定自体は画像→画像の連続時だけ保持する。
+    state.longestChallenge = false;
+    if (type !== 'image' || previousType !== 'image') {
+      if (type !== 'image') state.freeMeasureEnabled = false;
+    }
     state.snapped = false;
     state.snapping = false;
     state.snapLocked = false;
     state.snapSuspended = false;
     state.measuring = false;
+    state.measureViewInteractive = false;
+    state.pendingAcceptedMms = [];
+    state.pendingAnswerNearestMode = false;
+    state.resolvedAnswerMm = null;
     state.overlayToken += 1;
     setResult('');
 
@@ -1402,14 +2851,14 @@ pointer-events:none;
     if (customLabel) state._customLabel = customLabel;
     else state._customLabel = null;
 
+    clearFreeMeasureSelection();
     buildObject(type, lengthMm);
 
     if (type !== 'image') {
       state.customImageVisual = null;
       state.customImageFit = null;
-    } else {
-      state.customImageVisual = { x: 0, y: 0, w: state.objectW, h: state.objectH };
     }
+    // image の customImageVisual / customImageFit は buildObjectSvg() が正確な値を設定する。
 
     const objectH = state.objectH;
     const rulerH = state.rulerType === 'plastic' ? PLASTIC_RULER_HEIGHT : RULER_HEIGHT;
@@ -1442,12 +2891,29 @@ pointer-events:none;
     updateCanvasSize();   // ← キャンバス高さとviewBoxをオブジェクトサイズに合わせて更新
     updateSurfaceStatus();
     clearOverlay();
+    requestAnimationFrame(() => centerCurrentProblemView(false));
+    if (isFreeMeasureImageMode()) setTimeout(ensureFreeMeasureVisibility, 0);
     // showToastはapplyProblemByIdで上書きするのでここでは最小限に
   }
 
+  function centerCurrentProblemView(animate = false) {
+    const z = Math.max(0.14, state.zoom);
+    const objCx = (state.objectX + state.objectW / 2) * z;
+    const objCy = (state.objectY + state.objectH / 2) * z;
+    const rulerCy = (state.rulerTop + 70) * z;
+    const cx = objCx;
+    const cy = (objCy + rulerCy) / 2;
+    const left = Math.max(0, cx - stage.clientWidth * 0.48);
+    const top = Math.max(0, cy - stage.clientHeight * 0.42);
+    if (animate) animateStageScrollTo(left, top, 360);
+    else { stage.scrollLeft = left; stage.scrollTop = top; }
+  }
+
   function resetAll() {
+    closeAdvancedSettings();
     setProblem(state.objectType, state.lengthMm, false);
-    showToast('最初の位置にもどしました', 1400);
+    requestAnimationFrame(() => centerCurrentProblemView(false));
+    showToast('はじめの ばしょに もどったよ。', 1400);
   }
 
   function updateRulerPosition() {
@@ -1467,14 +2933,35 @@ pointer-events:none;
     const note = document.querySelector('.floating-note');
     if (note) {
       note.textContent = isBamboo
-        ? '※物差しは 1mm = 17px の高精度設計です。拡大縮小しても目盛り位置は崩れません。'
-        : '※プラスチックものさしは 1mm = 17px 設計です。0の目盛りが左端から6mm内側にあります。';
+        ? '0と、はかりたいところのはしを ぴったり合わせよう。'
+        : 'プラものさしは「0」の目盛りを、はかりたいところのはしに合わせよう。';
     }
   }
 
   // objectWrap の stage-surface 座標系での実際の矩形を返す
   // ※ DOM layoutに依存せず state の値を直接使う（大きいオブジェクトでのスクロールズレを防ぐ）
   function getObjectSurfaceRect() {
+    // 実際に測っている部分の矩形を返す。
+    // 鉛筆やボタンは描画用の余白があるため、そのままの外接矩形だと
+    // 0の位置が空白に来てしまう。ここで実物の左下に寄せる。
+    if (state.objectType === 'button') {
+      const d = state.lengthMm * PX_PER_MM;
+      const topInset = Math.max(0, state.objectH - d);
+      return {
+        x: state.objectX,
+        y: state.objectY + topInset,
+        w: d,
+        h: d,
+      };
+    }
+    if (state.objectType === 'pencil') {
+      return {
+        x: state.objectX,
+        y: state.objectY + 28,
+        w: state.objectW,
+        h: 124,
+      };
+    }
     return {
       x: state.objectX,
       y: state.objectY,
@@ -1485,13 +2972,33 @@ pointer-events:none;
 
   function snapTarget() {
     const r = getObjectSurfaceRect();
-    // プラ定規はSVG左端から PLASTIC_LEFT_OFFSET px が 0mm
-    // rulerLeft は SVG左端の座標なので、0mm をオブジェクト左端に合わせるには
-    // rulerLeft + PLASTIC_LEFT_OFFSET == objectX  →  rulerLeft = objectX - PLASTIC_LEFT_OFFSET
-    if (state.rulerType === 'plastic') {
-      return { x: r.x - PLASTIC_LEFT_OFFSET, y: r.y + r.h };
+    let anchorX = r.x;
+    let anchorY = r.y + r.h;
+
+    if (isFreeMeasureImageMode() && state.freePointA && state.freePointB && state.freeSelectedMm != null) {
+      const abs = getFreeMeasureAbsolutePoints();
+      if (abs) {
+        anchorX = abs.a.x;
+        const z = Math.max(0.14, state.zoom);
+        const lineY = (abs.a.y + abs.b.y) / 2;
+        const nearY = lineY + (28 / z);
+        const rulerH = state.rulerType === 'plastic' ? PLASTIC_RULER_HEIGHT : RULER_HEIGHT;
+        const objTop = r.y;
+        const objBottom = r.y + r.h;
+        const overlap = Math.max(0, Math.min(nearY + rulerH, objBottom) - Math.max(nearY, objTop));
+        const overlapScreen = overlap * z;
+        const objScreenH = r.h * z;
+        const tooMuchCover = overlapScreen > Math.max(48, objScreenH * 0.34);
+        anchorY = tooMuchCover ? (objBottom + 10 / z) : nearY;
+        state.freeRulerPlacement = tooMuchCover ? 'below-image' : 'near-line';
+      }
     }
-    return { x: r.x, y: r.y + r.h };
+
+    // プラ定規はSVG左端から PLASTIC_LEFT_OFFSET px が 0mm
+    if (state.rulerType === 'plastic') {
+      return { x: anchorX - PLASTIC_LEFT_OFFSET, y: anchorY };
+    }
+    return { x: anchorX, y: anchorY };
   }
 
   function trySnap(force = false) {
@@ -1501,7 +3008,9 @@ pointer-events:none;
     const smallObjectBoost = state.objectType === 'image'
       ? Math.max(0, 160 - Math.min(state.objectW, state.objectH)) * 1.1
       : 0;
-    const snapThreshold = force ? 999999 : (26 / state.zoom) + smallObjectBoost;
+    const snapThreshold = force ? 999999 : (isFreeMeasureImageMode()
+      ? (14 / Math.max(0.14, state.zoom))
+      : (26 / Math.max(0.14, state.zoom)) + smallObjectBoost);
     if (dist <= snapThreshold) {
       state.rulerLeft = target.x;
       state.rulerTop = target.y;
@@ -1509,8 +3018,8 @@ pointer-events:none;
       state.snapped = true;
       state.snapLocked = true;
       updateSurfaceStatus();
-      showHint('端と０を合わせたね！', 2600);
-      showToast('ぴったりスナップしました！「測るアニメ開始」を押そう', 2000);
+      showHint(isFreeMeasureImageMode() ? '青い点と0が そろったね！' : 'はしと0が そろったね！', 2600);
+      showToast(isFreeMeasureImageMode() ? '0がそろったよ。「④ はかる！」を おそう。' : '0がそろったよ。「はかる！」を おそう。', 2000);
       speak('端とゼロを合わせたね');
       beep(880, 80);
       return true;
@@ -1523,10 +3032,15 @@ pointer-events:none;
 
   function clearOverlay() {
     measureOverlay.innerHTML = '';
-    // アニメが中断された時に答え合わせボタンを隠す
+    // アニメが中断された時に答え合わせ待ちのPromiseも解放する。
     const ab = document.getElementById('answerBtn');
     if (ab) { ab.classList.remove('visible', 'pulsing'); }
-    _answerResolve = null;
+    hideFreeAnswerPanel();
+    if (_answerResolve) {
+      const pending = _answerResolve;
+      _answerResolve = null;
+      try { pending.resolve(); } catch (_) {}
+    }
   }
 
   function svgEl(tag, attrs = {}) {
@@ -1556,28 +3070,83 @@ pointer-events:none;
 
   function segmentLabelPosition(startX, endX, yBase, index, isMm) {
     const midX = (startX + endX) / 2;
+    const inv = 1 / Math.max(0.14, state.zoom);
 
     if (state.measureMode === 'mmOnly') {
-      const oddLift = (index % 2 === 1) ? -36 : 0;
-      return { x: midX, y: yBase - 28 + oddLift };
+      const oddLift = (index % 2 === 1) ? -22 * inv : 0;
+      return { x: midX, y: yBase - 24 * inv + oddLift };
     }
 
     if (isMm) {
-      return { x: midX, y: yBase - 28 };
+      return { x: midX, y: yBase - 24 * inv };
     }
 
-    return { x: midX, y: yBase - 44 };
+    return { x: midX, y: yBase - 34 * inv };
+  }
+
+  function rescaleMeasurementOverlay() {
+    if (!measureOverlay) return;
+    const inv = 1 / Math.max(0.14, state.zoom);
+
+    measureOverlay.querySelectorAll('[data-screen-stroke]').forEach(el => {
+      el.setAttribute('stroke-width', String(Number(el.dataset.screenStroke) * inv));
+      if (el.dataset.screenDash1) {
+        el.setAttribute('stroke-dasharray', `${Number(el.dataset.screenDash1) * inv} ${Number(el.dataset.screenDash2) * inv}`);
+      }
+    });
+    measureOverlay.querySelectorAll('[data-screen-font]').forEach(el => {
+      el.setAttribute('font-size', String(Number(el.dataset.screenFont) * inv));
+      if (el.dataset.screenTextStroke) el.setAttribute('stroke-width', String(Number(el.dataset.screenTextStroke) * inv));
+      if (el.dataset.baseY && el.dataset.screenYOffset) {
+        el.setAttribute('y', String(Number(el.dataset.baseY) + Number(el.dataset.screenYOffset) * inv));
+      }
+    });
+    measureOverlay.querySelectorAll('[data-screen-y1]').forEach(el => {
+      const base = Number(el.dataset.baseY || 0);
+      el.setAttribute('y1', String(base + Number(el.dataset.screenY1) * inv));
+      el.setAttribute('y2', String(base + Number(el.dataset.screenY2) * inv));
+    });
+    measureOverlay.querySelectorAll('.measure-segment-group').forEach(group => {
+      const startX = Number(group.dataset.startX), endX = Number(group.dataset.endX), yBase = Number(group.dataset.yBase);
+      const arcLift = Number(group.dataset.arcLift) * inv;
+      const path = group.querySelector('.measure-segment-path');
+      if (path) path.setAttribute('d', `M ${startX} ${yBase} Q ${(startX + endX) / 2} ${yBase - arcLift} ${endX} ${yBase}`);
+      group.querySelectorAll('.measure-segment-divider').forEach(line => {
+        line.setAttribute('y2', String(yBase + Number(line.dataset.bottom) * inv));
+      });
+      const label = group.querySelector('.measure-segment-label');
+      if (label) label.setAttribute('y', String(yBase - Number(label.dataset.offset) * inv));
+    });
+    const yellow = measureOverlay.querySelector('[data-yellow-bar]');
+    if (yellow) {
+      const natural = Number(yellow.dataset.naturalHeight);
+      const h = Math.max(natural, Number(yellow.dataset.minScreenHeight) * inv);
+      const base = Number(yellow.dataset.baseY);
+      yellow.setAttribute('height', String(h));
+      yellow.setAttribute('y', String(base - h));
+    }
   }
 
   function appendSegment(overlay, { startX, endX, yBase, color, label, index, isMm = false }) {
-    const group = svgEl('g', { opacity: '0', style: 'transition:opacity .18s linear;' });
-    const arcLift = isMm ? 30 : 38;
-    const arcStroke = isMm ? 7 : 8;
-    const dividerStroke = isMm ? 5 : 6;
-    const dividerBottom = isMm ? 22 : 28;
-    const labelSize = isMm ? 22 : 28;
+    const group = svgEl('g', { opacity: '0', style: 'transition:opacity .18s linear;', class: 'measure-segment-group' });
+    const inv = 1 / Math.max(0.14, state.zoom);
+    // ステージが縮小されても、学習に必要な数字・円弧は画面上で読める大きさを保つ。
+    const arcLift = (isMm ? 20 : 26) * inv;
+    const arcStroke = (isMm ? 3.2 : 3.8) * inv;
+    const dividerStroke = (isMm ? 2.6 : 3.2) * inv;
+    const dividerBottom = (isMm ? 14 : 18) * inv;
+    const labelSize = (isMm ? 18 : 21) * inv;
+    const labelOffsetScreen = state.measureMode === 'mmOnly'
+      ? (24 + (index % 2 === 1 ? 22 : 0))
+      : (isMm ? 24 : 34);
+    group.dataset.startX = String(startX);
+    group.dataset.endX = String(endX);
+    group.dataset.yBase = String(yBase);
+    group.dataset.arcLift = String(isMm ? 20 : 26);
 
     const path = svgEl('path', {
+      class:'measure-segment-path',
+      'data-screen-stroke': isMm ? 3.2 : 3.8,
       d: `M ${startX} ${yBase} Q ${(startX + endX) / 2} ${yBase - arcLift} ${endX} ${yBase}`,
       fill: 'none',
       stroke: color,
@@ -1586,6 +3155,9 @@ pointer-events:none;
     });
 
     const divider = svgEl('line', {
+      class:'measure-segment-divider',
+      'data-screen-stroke': isMm ? 2.6 : 3.2,
+      'data-bottom': isMm ? 14 : 18,
       x1: endX,
       y1: yBase - 2,
       x2: endX,
@@ -1597,6 +3169,12 @@ pointer-events:none;
 
     const labelPos = segmentLabelPosition(startX, endX, yBase, index, isMm);
     const text = svgEl('text', {
+      class:'measure-segment-label',
+      'data-screen-font': isMm ? 18 : 21,
+      'data-screen-text-stroke': isMm ? 3.5 : 4,
+      'data-base-y': yBase,
+      'data-screen-y-offset': -labelOffsetScreen,
+      'data-offset': labelOffsetScreen,
       x: labelPos.x,
       y: labelPos.y,
       fill: color,
@@ -1606,7 +3184,7 @@ pointer-events:none;
       'dominant-baseline': 'middle',
       'paint-order': 'stroke',
       'stroke': 'rgba(255,255,255,.92)',
-      'stroke-width': isMm ? '5' : '6',
+      'stroke-width': (isMm ? 3.5 : 4) * inv,
       'stroke-linejoin': 'round'
     });
     text.textContent = String(label);
@@ -1615,6 +3193,9 @@ pointer-events:none;
 
     if (!isMm && label === 1) {
       const zeroLine = svgEl('line', {
+        class:'measure-segment-divider',
+        'data-screen-stroke': isMm ? 2.6 : 3.2,
+        'data-bottom': isMm ? 14 : 18,
         x1: startX,
         y1: yBase - 2,
         x2: startX,
@@ -1635,23 +3216,63 @@ pointer-events:none;
   async function animateMeasurement() {
     if (!state.snapped || state.measuring) return;
     state.measuring = true;
+    state.measureViewInteractive = false;
     state.overlayToken += 1;
     const myToken = state.overlayToken;
     clearOverlay();
     updateSurfaceStatus();
 
     // ── アニメ開始時点で座標・サイズを確定（DOM layoutに依存しない） ──
-    const objRect = getObjectSurfaceRect();
-    const startX  = objRect.x;
+    const spec = getMeasurementSpec();
+    const objRect = spec.objRect;
+    const startX  = spec.startX;
     const startY  = objRect.y;
-    const pxPerMmReal = state.rulerType === 'plastic'
-      ? PX_PER_MM_PLASTIC
-      : state.objectW / state.lengthMm;
-    const totalPx = pxPerMmReal * state.lengthMm;
+    const totalPx = spec.totalPx;
+    let lengthMm = spec.lengthMm;
+    const rulerReadPx = spec.rulerReadPx ?? totalPx;
+    const pxPerMmReal = spec.pxPerMm ?? (rulerReadPx / Math.max(1, lengthMm));
     const objH    = objRect.h;
-    const target  = { x: startX, y: startY + objH };
+    const target  = { x: startX, y: spec.targetY };
 
-    const yellowThickness = Math.max(pxPerMmReal * 10, 60);
+    // 自由測定では、子どもが選んだ2点からものさし上辺まで補助線を出し、
+    // 「どこを測っているか」と目盛りの対応を崩さない。
+    if (spec.pointA && spec.pointB) {
+      const guideGroup = svgEl('g', { opacity: '0.82' });
+      [spec.pointA, spec.pointB].forEach((pt, idx) => {
+        const line = svgEl('line', {
+          x1: pt.x, y1: pt.y, x2: pt.x, y2: target.y,
+          stroke: idx === 0 ? '#2563eb' : '#ef4444',
+          'data-screen-stroke': 2.8,
+          'data-screen-dash1': 8,
+          'data-screen-dash2': 6,
+          'stroke-width': 2.8 / Math.max(0.14, state.zoom),
+          'stroke-dasharray': `${8 / Math.max(0.14, state.zoom)} ${6 / Math.max(0.14, state.zoom)}`,
+          'stroke-linecap': 'round'
+        });
+        guideGroup.appendChild(line);
+      });
+      measureOverlay.appendChild(guideGroup);
+    }
+
+    if (spec.freeApprox) {
+      const tickX = startX + rulerReadPx;
+      const inv = 1 / Math.max(0.14, state.zoom);
+      const mark = svgEl('g', { opacity: '0.96' });
+      const tickLine = svgEl('line', {
+        class:'nearest-tick-line', 'data-nearest-tick':'line',
+        x1: tickX, y1: target.y - 36 * inv, x2: tickX, y2: target.y + 18 * inv,
+        stroke: '#7c3aed', 'data-screen-stroke':3.5, 'data-base-y':target.y, 'data-screen-y1':-36, 'data-screen-y2':18, 'stroke-width': 3.5 * inv, 'stroke-linecap': 'round'
+      });
+      const tickText = svgEl('text', {
+        class:'nearest-tick-text', 'data-nearest-tick':'text',
+        x: tickX, y: target.y - 44 * inv, fill: '#6d28d9', 'data-screen-font':20, 'data-screen-text-stroke':4, 'data-base-y':target.y, 'data-screen-y-offset':-44, 'font-size': 20 * inv, 'font-weight': '900',
+        'text-anchor': 'middle', 'paint-order': 'stroke', stroke: 'white', 'stroke-width': 4 * inv
+      });
+      tickText.textContent = 'いちばん近い目盛り';
+      mark.appendChild(tickLine); mark.appendChild(tickText); measureOverlay.appendChild(mark);
+    }
+
+    const yellowThickness = Math.max(pxPerMmReal * 6, 28 / Math.max(0.14, state.zoom));
     const yellowY = target.y - yellowThickness;
     const yellowRect = svgEl('rect', {
       x: target.x,
@@ -1659,7 +3280,11 @@ pointer-events:none;
       width: 0,
       height: yellowThickness,
       fill: '#facc15',
-      opacity: '0.78'
+      opacity: '0.78',
+      'data-yellow-bar':'1',
+      'data-natural-height':pxPerMmReal * 6,
+      'data-min-screen-height':28,
+      'data-base-y':target.y
     });
     measureOverlay.appendChild(yellowRect);
 
@@ -1680,29 +3305,29 @@ pointer-events:none;
     const rulerH = state.rulerType === 'plastic' ? PLASTIC_RULER_HEIGHT : RULER_HEIGHT;
 
     // 対象領域: 黄色バーの左端〜右端、オブジェクト上端〜ルーラー下端
-    const regionLeft   = startX;
-    const regionRight  = startX + totalPx;
-    const regionTop    = startY;                               // オブジェクト上端
+    const regionLeft   = spec.regionLeft;
+    const regionRight  = spec.regionRight;
+    const regionTop    = spec.regionTop;                      // オブジェクト上端
     const regionBottom = target.y + rulerH;                   // ルーラー下端
 
     const regionW = regionRight - regionLeft;
     const regionH = regionBottom - regionTop;
 
     // ビューポートサイズ（ヘッダー分除く）
-    const viewport = stageViewport;
+    const viewport = stage;
     const vpW = viewport.clientWidth;
     const vpH = viewport.clientHeight;
 
     // 余白を持たせた最大ズーム計算（領域が画面の85%に収まるように）
     const MARGIN = 0.82;
     const zoomFit = Math.min(vpW / regionW, vpH / regionH) * MARGIN;
-    const zoomTarget = Math.max(0.14, Math.min(1.2, zoomFit));
-
-    // 現在ズーム保存
+    // 児童が細かい目盛りを見るために拡大していた場合、その倍率を勝手に下げない。
     const zoomBefore = state.zoom;
+    const fitTarget = Math.max(0.14, Math.min(1.2, zoomFit));
+    const zoomTarget = Math.max(zoomBefore, fitTarget);
 
-    // ── ズームをアニメーション付きで変更 ──
-    await animateZoom(zoomBefore, zoomTarget, 480);
+    // ── 必要なときだけ拡大。縮小はしない ──
+    if (zoomTarget > zoomBefore + 0.005) await animateZoom(zoomBefore, zoomTarget, 480);
     if (myToken !== state.overlayToken) return;
 
     // ズーム後にセンタリングスクロール
@@ -1712,15 +3337,36 @@ pointer-events:none;
     viewport.scrollLeft = Math.max(0, cx - vpW / 2);
     viewport.scrollTop  = Math.max(0, cy - vpH / 2);
 
-    // ── 答え合わせボタンを表示してパルスさせる ──
-    showAnswerBtn();
+    // ここからは「読む時間」。教材の位置関係は固定したまま、
+    // 拡大・縮小・スクロール・手のひら移動を自由にする。
+    state.measureViewInteractive = true;
+    updateSurfaceStatus();
 
-    // ここで一時停止。ボタンが押されるまで待つ
+    // ── こたえ入力 ──
+    // 通常問題も自由測定も、自分で目盛りを読んでから答えを入れる。
+    showFreeAnswerPanel(lengthMm, {
+      nearestMode: !!spec.freeApprox,
+      acceptedMms: spec.acceptedMms || [lengthMm]
+    });
+
+    // ここで一時停止。正答または「こたえを見る」まで待つ。
     await waitForAnswer(myToken);
     if (myToken !== state.overlayToken) return;
 
-    // ── 答え合わせボタンを非表示 ──
+    // ちょうど半目盛り付近で別側の目盛りを正解として選んだ場合は、
+    // その読み方に合わせて、この後の数え上げと紫の目印もそろえる。
+    if (spec.freeApprox && Number.isFinite(state.resolvedAnswerMm) && (spec.acceptedMms || []).includes(state.resolvedAnswerMm)) {
+      lengthMm = state.resolvedAnswerMm;
+      const chosenX = startX + lengthMm * PX_PER_MM;
+      measureOverlay.querySelectorAll('[data-nearest-tick]').forEach(el => {
+        if (el.tagName.toLowerCase() === 'line') { el.setAttribute('x1', String(chosenX)); el.setAttribute('x2', String(chosenX)); }
+        else el.setAttribute('x', String(chosenX));
+      });
+    }
+
+    // ── 答え合わせUIを非表示 ──
     hideAnswerBtn();
+    hideFreeAnswerPanel();
 
     // ══════════════════════════════════════════════════
     // ② 残りのアニメ（円弧セグメント）
@@ -1730,7 +3376,7 @@ pointer-events:none;
     let currentX = target.x;
 
     if (state.measureMode === 'mmOnly') {
-      for (let i = 0; i < state.lengthMm; i++) {
+      for (let i = 0; i < lengthMm; i++) {
         await wait(90);
         if (myToken !== state.overlayToken) return;
         const nextX = currentX + pxPerMmReal;
@@ -1748,13 +3394,13 @@ pointer-events:none;
       }
       await wait(180);
       if (myToken !== state.overlayToken) return;
-      setResult(`<span class="mm">${state.lengthMm}mm</span> だね！`);
+      setResult(spec.freeApprox ? `赤い線にいちばん近い目盛りは <span class="mm">${lengthMm}mm</span> だね！` : `<span class="mm">${lengthMm}mm</span> だね！`);
       const mmSuffix = state.readMode === 'short' ? 'みり' : 'みりめーとる';
-      speak(`${numToKanaMm(state.lengthMm)}${mmSuffix}だね`);
+      speak(spec.freeApprox ? `いちばん近い目盛りは${numToKanaMm(lengthMm)}${mmSuffix}だね` : `${numToKanaMm(lengthMm)}${mmSuffix}だね`);
       beep(980, 100, 'triangle', 0.04);
     } else {
-      const cmCount = Math.floor(state.lengthMm / 10);
-      const remMm   = state.lengthMm % 10;
+      const cmCount = Math.floor(lengthMm / 10);
+      const remMm   = lengthMm % 10;
 
       for (let i = 0; i < cmCount; i++) {
         await wait(240);
@@ -1792,9 +3438,9 @@ pointer-events:none;
 
       await wait(220);
       if (myToken !== state.overlayToken) return;
-      setResult(`<span class="cm">${Math.floor(state.lengthMm / 10)}cm</span> <span class="mm">${state.lengthMm % 10}mm</span>（${state.lengthMm}ミリメートル）だね！`);
-      const cm      = Math.floor(state.lengthMm / 10);
-      const remMm2  = state.lengthMm % 10;
+      setResult(spec.freeApprox ? `赤い線にいちばん近い目盛りは <span class="cm">${Math.floor(lengthMm / 10)}cm</span> <span class="mm">${lengthMm % 10}mm</span> だね！` : `<span class="cm">${Math.floor(lengthMm / 10)}cm</span> <span class="mm">${lengthMm % 10}mm</span>（${lengthMm}ミリメートル）だね！`);
+      const cm      = Math.floor(lengthMm / 10);
+      const remMm2  = lengthMm % 10;
       const isShort = state.readMode === 'short';
       const cmSuffix = isShort ? 'せんち' : 'せんちめーとる';
       const mmSuffix2 = isShort ? 'みり' : 'みりめーとる';
@@ -1807,13 +3453,16 @@ pointer-events:none;
       } else {
         speakTxt = `${CM_KANA[cm]}${cmSuffix}${numToKanaMm(remMm2)}${mmSuffix2}だね`;
       }
+      if (spec.freeApprox) speakTxt = `いちばん近い目盛りは${speakTxt.replace(/だね$/, '')}だね`;
       speak(speakTxt);
       beep(980, 120, 'triangle', 0.05);
       beep(1240, 150, 'triangle', 0.05);
     }
 
     state.measuring = false;
+    state.measureViewInteractive = false;
     updateSurfaceStatus();
+    showLongestChallengeFeedback();
   }
 
   // ── ズームをなめらかにアニメーション ──
@@ -1851,6 +3500,147 @@ pointer-events:none;
     if (ab) ab.classList.remove('visible', 'pulsing');
   }
 
+  function positionFreeAnswerPanel() {
+    const panel = document.getElementById('freeAnswerPanel');
+    if (!panel || !panel.classList.contains('visible')) return;
+    const vp = stage.getBoundingClientRect();
+    const abs = getFreeMeasureAbsolutePoints();
+    const anchorStageY = abs ? (abs.a.y + abs.b.y) / 2 : state.rulerTop;
+    const anchorClientY = vp.top + anchorStageY * state.zoom - stage.scrollTop;
+    const ph = Math.max(1, panel.offsetHeight);
+    const margin = 8;
+    const topCandidate = vp.top + margin;
+    const bottomCandidate = vp.bottom - ph - margin;
+    const putAtTop = anchorClientY > vp.top + vp.height * 0.5;
+    const desired = putAtTop ? topCandidate : bottomCandidate;
+    const maxTop = Math.max(margin, window.innerHeight - ph - margin);
+    panel.style.top = `${Math.max(margin, Math.min(maxTop, desired))}px`;
+    panel.style.bottom = 'auto';
+  }
+
+  function showFreeAnswerPanel(expectedMm, options = {}) {
+    const panel = document.getElementById('freeAnswerPanel');
+    const cmWrap = document.getElementById('freeCmWrap');
+    const cmInput = document.getElementById('freeCmInput');
+    const mmInput = document.getElementById('freeMmInput');
+    const mmUnit = document.getElementById('freeMmUnit');
+    const msg = document.getElementById('freeAnswerMessage');
+    const reveal = document.getElementById('freeRevealBtn');
+    const prompt = document.getElementById('answerPrompt');
+    if (!panel || !mmInput) return;
+
+    state.pendingAnswerMm = expectedMm;
+    state.pendingAcceptedMms = Array.isArray(options.acceptedMms) && options.acceptedMms.length ? options.acceptedMms : [expectedMm];
+    state.pendingAnswerNearestMode = !!options.nearestMode;
+    state.resolvedAnswerMm = null;
+    state.answerAttempts = 0;
+    const mmOnly = state.measureMode === 'mmOnly';
+    if (cmWrap) cmWrap.style.display = mmOnly ? 'none' : 'inline-flex';
+    if (cmInput) cmInput.value = '';
+    mmInput.value = '';
+    mmInput.max = mmOnly ? '300' : '9';
+    if (mmUnit) mmUnit.textContent = 'mm';
+    if (prompt) prompt.textContent = state.pendingAnswerNearestMode ? '赤い線に いちばん近い目盛りは？' : 'はかるものの右はしの目盛りは？';
+    if (msg) msg.textContent = mmOnly
+      ? (state.pendingAnswerNearestMode ? 'いちばん近い mm の目盛りを入れよう。' : '右はしの mm の目盛りを入れよう。')
+      : (state.pendingAnswerNearestMode ? 'いちばん近い目盛りを、cm と mm で入れよう。' : '何cm何mmか、自分で読んで入れよう。0になるほうは空らんでもOK。');
+    if (reveal) reveal.classList.remove('visible');
+    panel.classList.add('visible');
+    requestAnimationFrame(positionFreeAnswerPanel);
+    setTimeout(() => (mmOnly ? mmInput : cmInput)?.focus(), 80);
+  }
+
+  function hideFreeAnswerPanel() {
+    const panel = document.getElementById('freeAnswerPanel');
+    if (panel) { panel.classList.remove('visible'); panel.style.top = ''; panel.style.bottom = ''; }
+  }
+
+  function resolvePendingAnswer() {
+    if (!_answerResolve) return;
+    const { resolve } = _answerResolve;
+    _answerResolve = null;
+    hideAnswerBtn();
+    hideFreeAnswerPanel();
+    resolve();
+  }
+
+  function freeWrongAnswerHint(enteredMm, expectedMm, cmVal, mmVal, mmOnly) {
+    const target = state.pendingAnswerNearestMode ? '赤い線' : 'はかるものの右はし';
+    if (mmOnly) {
+      if (enteredMm < expectedMm) return `少し小さく読んでいるよ。${target}より手前の目盛りを読んでいないか見てみよう。`;
+      return `少し大きく読んでいるよ。${target}をこえた目盛りを読んでいないか見てみよう。`;
+    }
+
+    const expectedCm = Math.floor(expectedMm / 10);
+    const expectedRem = expectedMm % 10;
+    const cmOk = cmVal === expectedCm;
+    const mmOk = mmVal === expectedRem;
+    if (cmOk && !mmOk) {
+      return enteredMm < expectedMm
+        ? `cmは合っているよ。最後の1cmの中を、${target}まで1mmずつもう一度見よう。`
+        : `cmは合っているよ。${target}をこえてmmを数えていないか見直そう。`;
+    }
+    if (!cmOk && mmOk) {
+      return enteredMm < expectedMm
+        ? 'mmは合っているよ。10mmで1cmのまとまりが、もう少しないか数え直そう。'
+        : 'mmは合っているよ。1cmのまとまりを1つ多く数えていないか見直そう。';
+    }
+    if (enteredMm < expectedMm) {
+      return '少し小さく読んでいるよ。まず10mmで1cmのまとまりを数え、そのあと残りのmmを見よう。';
+    }
+    return `${target}をこえた目盛りまで数えていないか、cm→mmの順で見直そう。`;
+  }
+
+  function checkFreeAnswer() {
+    if (state.pendingAnswerMm == null) return;
+    const cmInput = document.getElementById('freeCmInput');
+    const mmInput = document.getElementById('freeMmInput');
+    const msg = document.getElementById('freeAnswerMessage');
+    const reveal = document.getElementById('freeRevealBtn');
+    const mmOnly = state.measureMode === 'mmOnly';
+
+    const mmRaw = String(mmInput?.value ?? '').trim();
+    const cmRaw = String(cmInput?.value ?? '').trim();
+    // cm＋mmモードでは、0になる単位の欄は空白でも0として扱う。
+    // 例：4cmちょうど →「4cm・mm空白」、5mm →「cm空白・5mm」で正解。
+    const mmVal = (!mmOnly && mmRaw === '') ? 0 : Number.parseInt(mmRaw, 10);
+    const cmVal = (!mmOnly && cmRaw === '') ? 0 : Number.parseInt(cmRaw, 10);
+    if (!Number.isFinite(mmVal) || (!mmOnly && !Number.isFinite(cmVal))) {
+      if (msg) msg.textContent = mmOnly
+        ? '数字を入れてから、こたえあわせを押してね。'
+        : '数字を入れてね。0になるほうの単位は空白でもOKだよ。';
+      return;
+    }
+    if (mmOnly) {
+      if (mmVal < 0 || mmVal > RULER_MM) {
+        if (msg) msg.textContent = `0〜${RULER_MM}の数字を入れてね。`;
+        return;
+      }
+    } else {
+      if (cmVal < 0 || cmVal > 30 || mmVal < 0 || mmVal > 9) {
+        if (msg) msg.textContent = 'cmは0〜30、mmは0〜9で入れてね。';
+        return;
+      }
+    }
+    const enteredMm = mmOnly ? mmVal : cmVal * 10 + mmVal;
+    const accepted = state.pendingAcceptedMms?.length ? state.pendingAcceptedMms : [state.pendingAnswerMm];
+    if (accepted.includes(enteredMm)) {
+      state.resolvedAnswerMm = enteredMm;
+      if (msg) msg.textContent = accepted.length > 1 ? '正解！ ちょうど目盛りのまんなかくらいなので、どちらの読み方でもOKだよ。' : '正解！';
+      beep(1040, 90, 'triangle', 0.04);
+      setTimeout(resolvePendingAnswer, 260);
+      return;
+    }
+
+    state.answerAttempts += 1;
+    if (msg) msg.textContent = freeWrongAnswerHint(enteredMm, state.pendingAnswerMm, cmVal, mmVal, mmOnly);
+    beep(360, 90, 'sine', 0.025);
+    if (state.answerAttempts >= 2 && reveal) {
+      reveal.classList.add('visible');
+      if (msg) msg.textContent += ' まだ難しければ「こたえを見る」でも確認できるよ。';
+    }
+  }
+
   function waitForAnswer(token) {
     return new Promise(resolve => {
       _answerResolve = { resolve, token };
@@ -1860,19 +3650,77 @@ pointer-events:none;
   // ── 答え合わせボタン初期化 ──
   const answerBtn = document.getElementById('answerBtn');
   answerBtn.addEventListener('click', () => {
-    if (_answerResolve) {
-      const { resolve } = _answerResolve;
-      _answerResolve = null;
-      hideAnswerBtn();
-      resolve();
-    }
+    if (_answerResolve) resolvePendingAnswer();
+  });
+
+  const freeAnswerCheckBtn = document.getElementById('freeAnswerCheckBtn');
+  if (freeAnswerCheckBtn) freeAnswerCheckBtn.addEventListener('click', checkFreeAnswer);
+  const freeRevealBtn = document.getElementById('freeRevealBtn');
+  if (freeRevealBtn) freeRevealBtn.addEventListener('click', resolvePendingAnswer);
+  ['freeCmInput','freeMmInput'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); checkFreeAnswer(); }
+    });
   });
 
 
+  function measurementPanPointerDown(e) {
+    if (!state.measuring || !state.measureViewInteractive || state.freeAdjustmentAnimating) return;
+    if (e.button != null && e.button !== 0) return;
+    state.measurePanActive = true;
+    state.measurePanPointerId = e.pointerId;
+    state.measurePanStartClientX = e.clientX;
+    state.measurePanStartClientY = e.clientY;
+    state.measurePanStartScrollLeft = stage.scrollLeft;
+    state.measurePanStartScrollTop = stage.scrollTop;
+    stage.classList.add('panning');
+    try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
+  }
+
+  function measurementPanPointerMove(e) {
+    if (!state.measurePanActive || e.pointerId !== state.measurePanPointerId) return;
+    const dx = e.clientX - state.measurePanStartClientX;
+    const dy = e.clientY - state.measurePanStartClientY;
+    stage.scrollLeft = Math.max(0, state.measurePanStartScrollLeft - dx);
+    stage.scrollTop = Math.max(0, state.measurePanStartScrollTop - dy);
+    e.preventDefault();
+  }
+
+  function measurementPanPointerUp(e) {
+    if (!state.measurePanActive) return;
+    if (e && state.measurePanPointerId != null && e.pointerId != null && e.pointerId !== state.measurePanPointerId) return;
+    try { if (state.measurePanPointerId != null) stage.releasePointerCapture(state.measurePanPointerId); } catch (_) {}
+    state.measurePanActive = false;
+    state.measurePanPointerId = null;
+    stage.classList.remove('panning');
+  }
+
   function objectPointerDown(e) {
-    if (state.measuring) return;
+    if (state.measuring || state.freeAdjustmentAnimating) return;
+
+    const freeHandle = e.target && e.target.closest ? e.target.closest('[data-free-handle]') : null;
+    if (freeHandle && isFreeMeasureImageMode()) {
+      startFreeHandleDrag(freeHandle.getAttribute('data-free-handle'), e);
+      return;
+    }
+
+    if (isFreeMeasureImageMode()) {
+      if (state.freeInteractionMode === 'move') {
+        // fall through to object drag mode
+      } else {
+        e.preventDefault();
+        e.stopPropagation();
+        handleFreeMeasureTap(e);
+        return;
+      }
+    }
+
     e.preventDefault();
     e.stopPropagation();
+    setResult('');
+    clearOverlay();
 
     state.objectDragging = true;
     objectWrap.classList.add('dragging');
@@ -1893,6 +3741,10 @@ pointer-events:none;
   }
 
   function objectPointerMove(e) {
+    if (state.freeHandleDragging) {
+      moveFreeHandle(e);
+      return;
+    }
     if (!state.objectDragging || state.measuring) return;
 
     const dx = (e.clientX - state.objectDragStartClientX) / state.zoom;
@@ -1903,6 +3755,7 @@ pointer-events:none;
 
     objectWrap.style.left = `${state.objectX}px`;
     objectWrap.style.top = `${state.objectY}px`;
+    if (isFreeMeasureImageMode()) renderFreeAlignmentGuides();
 
     if (state.snapSuspended) {
       state.snapped = false;
@@ -1911,6 +3764,11 @@ pointer-events:none;
   }
 
   function objectPointerUp() {
+    if (state.freeHandleDragging) {
+      endFreeHandleDrag();
+      return;
+    }
+
     state.objectDragging = false;
     objectWrap.classList.remove('dragging');
     if (state.objectDragPointerId !== null) {
@@ -1922,10 +3780,13 @@ pointer-events:none;
       state.snapSuspended = false;
       trySnap(false);
     }
+    if (isFreeMeasureImageMode()) updateSurfaceStatus();
   }
 
   function pointerDown(e) {
-    if (state.measuring) return;
+    if (state.measuring || state.freeAdjustmentAnimating) return;
+    setResult('');
+    clearOverlay();
     state.dragging = true;
     rulerWrap.classList.add('dragging');
     state.dragPointerId = e.pointerId;
@@ -1960,7 +3821,10 @@ pointer-events:none;
     updateRulerPosition();
 
     if (!state.snapSuspended) {
-      trySnap(false);
+      const didSnap = trySnap(false);
+      if (!didSnap) updateSurfaceStatus();
+    } else {
+      updateSurfaceStatus();
     }
   }
 
@@ -1977,13 +3841,24 @@ pointer-events:none;
       state.snapSuspended = false;
       trySnap(false);
     }
+    updateSurfaceStatus();
   }
 
-  function changeZoom(nextZoom) {
-    const clamped = Math.max(0.14, Math.min(1.2, nextZoom));
+  function changeZoom(nextZoom, options = {}) {
+    const clamped = Math.max(0.14, Math.min(1.8, nextZoom));
+    if (!options.auto && state.autoZoomRestore != null) state.autoZoomRestore = null;
+
+    // いま見ている場所を中心にしたまま拡大・縮小する。
+    const oldZoom = Math.max(0.14, state.zoom);
+    const centerModelX = (stage.scrollLeft + stage.clientWidth / 2) / oldZoom;
+    const centerModelY = (stage.scrollTop + stage.clientHeight / 2) / oldZoom;
+
     state.zoom = Math.round(clamped * 100) / 100;
     updateZoomUI();
     updateCanvasSize();
+
+    stage.scrollLeft = Math.max(0, centerModelX * state.zoom - stage.clientWidth / 2);
+    stage.scrollTop = Math.max(0, centerModelY * state.zoom - stage.clientHeight / 2);
     updateSurfaceStatus();
   }
 
@@ -1993,7 +3868,8 @@ pointer-events:none;
   }
 
   async function loadCustomImageFile(file) {
-    return preprocessImageFile(file);
+    // ユーザーが直接選んだ画像は、写真を含め元画像の構図を勝手に切らない。
+    return preprocessImageFile(file, { allowCrop: false });
   }
 
   if (imageLoadBtn && imageInput) {
@@ -2007,12 +3883,17 @@ pointer-events:none;
         const loaded = await loadCustomImageFile(file);
         state.customImageSrc = loaded.src;
         state.customImageRatio = loaded.ratio || (loaded.height / loaded.width);
+        state.customImageEdgePoints = loaded.edgePoints || [];
+        state.customImageLongestPair = loaded.longestPair || null;
+        state.customImageOutlineReliable = !!loaded.outlineReliable;
+        state.customImageWasCropped = !!loaded.cropped;
+        if (!state.customImageOutlineReliable || !state.customImageLongestPair) state.longestChallenge = false;
         setProblem('image', randomLengthMm('image'), true);
         trySnap(false);
-        showToast('画像を読み込みました。余白を落として使います。', 2000);
+        showToast(loaded.cropped ? 'えを よみこんだよ。' : 'えを よみこんだよ。', 2200);
       } catch (err) {
         console.error(err);
-        showToast('画像の読み込みに失敗しました。別の画像で試してください。', 2200);
+        showToast('えを よみこめなかったよ。べつのえで ためしてね。', 2200);
       } finally {
         imageInput.value = '';
       }
@@ -2024,18 +3905,18 @@ pointer-events:none;
     loadFolderBtn.addEventListener('click', async () => {
       loadFolderBtn.disabled = true;
       loadFolderBtn.textContent = '📂 読み込み中…';
-      showToast('フォルダを選択してください。PNG画像を読み込みます…', 3000);
+      showToast('えのフォルダを えらんでね。', 2200);
       const ok = await loadFolderPngs();
       loadFolderBtn.disabled = false;
       if (ok && pngFileList.length > 0) {
         loadFolderBtn.textContent = `📁 PNG ${pngFileList.length}枚読込済`;
-        showToast(`✅ PNG ${pngFileList.length}枚を読み込みました！問題ID4〜${maxProblemId()}に追加されました。`, 3000);
+        showToast(`えを ${pngFileList.length}まい よみこんだよ。`, 2200);
       } else if (ok && pngFileList.length === 0) {
         loadFolderBtn.textContent = '📁 PNGフォルダ読み込み';
-        showToast('フォルダ内にPNGファイルが見つかりませんでした。', 2400);
+        showToast('えが 見つからなかったよ。', 2000);
       } else {
         loadFolderBtn.textContent = '📁 PNGフォルダ読み込み';
-        showToast('読み込みをキャンセルしました。または対応していないブラウザです。', 2400);
+        showToast('よみこみを やめたよ。', 1800);
       }
     });
   }
@@ -2049,7 +3930,31 @@ pointer-events:none;
       debugBtn.classList.toggle('active', on);
       debugBtn.textContent = on ? '🔧 DEBUG ON' : '🔧 DEBUG';
     });
+
+    // 児童の誤操作を防ぎつつ先生は使えるよう、タイトル約2秒長押しでDEBUGを表示する。
+    const titleForDebug = document.querySelector('.title h1');
+    let debugHoldTimer = null;
+    const cancelDebugHold = () => {
+      if (debugHoldTimer) clearTimeout(debugHoldTimer);
+      debugHoldTimer = null;
+    };
+    if (titleForDebug) {
+      titleForDebug.addEventListener('pointerdown', () => {
+        cancelDebugHold();
+        debugHoldTimer = setTimeout(() => {
+          debugBtn.style.display = '';
+          showToast('せんせいようを ひらいたよ。', 1600);
+          debugHoldTimer = null;
+        }, 1900);
+      });
+      ['pointerup','pointerleave','pointercancel'].forEach(ev => titleForDebug.addEventListener(ev, cancelDebugHold));
+    }
   }
+
+  stage.addEventListener('pointerdown', measurementPanPointerDown);
+  stage.addEventListener('pointermove', measurementPanPointerMove);
+  stage.addEventListener('pointerup', measurementPanPointerUp);
+  stage.addEventListener('pointercancel', measurementPanPointerUp);
 
   rulerWrap.addEventListener('pointerdown', pointerDown);
   objectWrap.addEventListener('pointerdown', objectPointerDown);
@@ -2065,10 +3970,19 @@ pointer-events:none;
     pointerUp(e);
     objectPointerUp(e);
   });
+  window.addEventListener('resize', () => {
+    if (document.getElementById('freeAnswerPanel')?.classList.contains('visible')) requestAnimationFrame(positionFreeAnswerPanel);
+  });
 
   hintToggle.addEventListener('change', applyHintToggle);
 
+  function closeAdvancedSettings() {
+    const details = document.querySelector('.advanced-controls');
+    if (details) details.open = false;
+  }
+
   newProblemBtn.addEventListener('click', () => {
+    closeAdvancedSettings();
     advanceToNextProblem();
   });
 
@@ -2076,14 +3990,162 @@ pointer-events:none;
     modeBtn.addEventListener('click', () => {
       state.measureMode = state.measureMode === 'normal' ? 'mmOnly' : 'normal';
       modeBtn.textContent = state.measureMode === 'normal'
-        ? '通常測定モード'
-        : 'mmだけ測定モード';
+        ? 'cmとmm'
+        : 'mmだけ';
       showToast(
         state.measureMode === 'normal'
-          ? 'cmとmmで測るモードです'
-          : 'mmだけで測るモードです',
+          ? 'cmとmmで はかるよ。'
+          : 'mmだけで はかるよ。',
         1800
       );
+    });
+  }
+
+  function refreshFreeMeasureBtn() {
+    if (!freeMeasureBtn) return;
+    const imageProblem = state.objectType === 'image';
+    freeMeasureBtn.style.display = imageProblem ? '' : 'none';
+    freeMeasureBtn.disabled = !imageProblem;
+    freeMeasureBtn.textContent = state.freeMeasureEnabled ? '🪄 じゆうにはかる ✓' : '🪄 じゆうにはかる';
+    freeMeasureBtn.classList.toggle('ruler-toggle-active', imageProblem && state.freeMeasureEnabled);
+  }
+
+  function refreshFreeActionUI() {
+    if (precisionSelectBtn) {
+      const enabled = state.freeMeasureEnabled && state.objectType === 'image' && !!state.freePointA && !state.freePointB;
+      precisionSelectBtn.disabled = !enabled;
+      precisionSelectBtn.style.display = enabled ? '' : 'none';
+    }
+    if (freeActionBtn) {
+      const enabled = state.freeMeasureEnabled && state.objectType === 'image';
+      freeActionBtn.disabled = !enabled;
+      freeActionBtn.style.display = enabled ? '' : 'none';
+      // ボタンは「今の状態」ではなく「押したらできること」を表示する。
+      freeActionBtn.textContent = state.freeInteractionMode === 'move' ? '✏️ 点をえらぶ' : '✋ えをうごかす';
+      freeActionBtn.classList.toggle('ruler-toggle-active', enabled && state.freeInteractionMode === 'move');
+    }
+    if (clearFreeBtn) {
+      const enabled = state.freeMeasureEnabled && state.objectType === 'image' && !!state.freePointA;
+      clearFreeBtn.disabled = !enabled;
+      clearFreeBtn.style.display = enabled ? '' : 'none';
+    }
+    if (edgeSnapBtn) {
+      const enabled = state.freeMeasureEnabled && state.objectType === 'image' && state.customImageOutlineReliable && (state.customImageEdgePoints || []).length > 0;
+      edgeSnapBtn.disabled = !enabled;
+      edgeSnapBtn.style.display = enabled ? '' : 'none';
+      edgeSnapBtn.textContent = state.outlineSnapEnabled ? '🧲 ふちにピタッ ✓' : '🧲 ふちにピタッ';
+      edgeSnapBtn.classList.toggle('ruler-toggle-active', enabled && state.outlineSnapEnabled);
+      edgeSnapBtn.style.opacity = '1';
+    }
+    if (longestChallengeBtn) {
+      const enabled = state.freeMeasureEnabled && state.objectType === 'image' && state.customImageOutlineReliable && !!state.customImageLongestPair;
+      longestChallengeBtn.disabled = !enabled;
+      longestChallengeBtn.style.display = enabled ? '' : 'none';
+      longestChallengeBtn.textContent = state.longestChallenge ? '🎯 いちばん長いところ ✓' : '🎯 いちばん長いところ';
+      longestChallengeBtn.classList.toggle('ruler-toggle-active', enabled && state.longestChallenge);
+      longestChallengeBtn.style.opacity = '1';
+      longestChallengeBtn.title = '画像のふちから、いちばん離れた2点を比べます';
+    }
+  }
+
+  if (freeMeasureBtn) {
+    freeMeasureBtn.addEventListener('click', () => {
+      closeAdvancedSettings();
+      state.freeMeasureEnabled = !state.freeMeasureEnabled;
+      if (!state.freeMeasureEnabled) {
+        state.longestChallenge = false;
+        restoreAutoZoom();
+      }
+      clearFreeMeasureSelection();
+      state.snapped = false;
+      state.snapLocked = false;
+      state.snapSuspended = false;
+      clearOverlay();
+
+      if (state.objectType === 'image') {
+        syncObjectLayout(false);
+      } else {
+        updateSurfaceStatus();
+      }
+
+      refreshFreeMeasureBtn();
+      refreshFreeActionUI();
+      if (state.freeMeasureEnabled && state.objectType === 'image') {
+        ensureFreeMeasureVisibility();
+      }
+      if (state.freeMeasureEnabled) {
+        const msg = state.objectType === 'image'
+          ? 'じゆうにはかるよ。はかりたい2つの はしを おしてね。'
+          : 'じゆうにはかるよ。えのもんだいで つかえるよ。';
+        showToast(msg, 3200);
+      } else {
+        showToast('じゆうにはかるを おわったよ。', 1800);
+      }
+    });
+  }
+
+  if (precisionSelectBtn) {
+    precisionSelectBtn.addEventListener('click', () => {
+      if (!(state.freeMeasureEnabled && state.objectType === 'image' && state.freePointA && !state.freePointB)) return;
+      zoomNearFirstFreePoint();
+    });
+  }
+
+  if (freeActionBtn) {
+    freeActionBtn.addEventListener('click', () => {
+      if (!(state.freeMeasureEnabled && state.objectType === 'image')) return;
+      state.freeInteractionMode = state.freeInteractionMode === 'points' ? 'move' : 'points';
+      refreshFreeActionUI();
+      updateSurfaceStatus();
+      showToast(
+        state.freeInteractionMode === 'move'
+          ? 'えを つかんで、見やすいところへ うごかせるよ。'
+          : '点をえらぶよ。青い丸・赤い丸も うごかせるよ。',
+        2600
+      );
+    });
+  }
+
+  if (clearFreeBtn) {
+    clearFreeBtn.addEventListener('click', () => {
+      if (!(state.freeMeasureEnabled && state.objectType === 'image')) return;
+      clearFreeMeasureSelection();
+      state.snapped = false;
+      state.snapLocked = false;
+      state.snapSuspended = false;
+      clearOverlay();
+      syncObjectLayout(false);
+      refreshFreeActionUI();
+      showToast('点を けしたよ。もういちど 2つえらんでね。', 2400);
+    });
+  }
+
+
+  if (edgeSnapBtn) {
+    edgeSnapBtn.addEventListener('click', () => {
+      if (!(state.freeMeasureEnabled && state.objectType === 'image')) return;
+      state.outlineSnapEnabled = !state.outlineSnapEnabled;
+      refreshFreeActionUI();
+      showToast(state.outlineSnapEnabled
+        ? 'ふちピタを つけたよ。ふちの近くを おすと、ぴたっと あうよ。'
+        : 'ふちピタを けしたよ。おしたところを そのままつかうよ。', 3000);
+    });
+  }
+
+  if (longestChallengeBtn) {
+    longestChallengeBtn.addEventListener('click', () => {
+      if (!(state.freeMeasureEnabled && state.objectType === 'image')) return;
+      state.longestChallenge = !state.longestChallenge;
+      clearFreeMeasureSelection();
+      state.snapped = false;
+      state.snapLocked = false;
+      state.snapSuspended = false;
+      clearOverlay();
+      syncObjectLayout(false);
+      refreshFreeActionUI();
+      showToast(state.longestChallenge
+        ? 'いちばん長そうなところを さがそう。りょうはしを えらんで はかってみよう。'
+        : 'いちばん長いところさがしを おわったよ。すきなところを はかれるよ。', 3600);
     });
   }
 
@@ -2093,7 +4155,7 @@ pointer-events:none;
       state._customLabel = null;
       setProblem('pencil', randomLengthMm('pencil'), true);
       // バッジは変えない（問題IDシステム外）
-      showToast('🖊 鉛筆の長さをランダムで再生成しました（問題IDはそのままです）', 1800);
+      showToast('えんぴつの長さを かえたよ。', 1500);
     });
   }
 
@@ -2111,21 +4173,32 @@ pointer-events:none;
       readModeBtn.textContent = isShort ? '🔊 省略読み' : '🔊 正式読み';
       readModeBtn.classList.toggle('ruler-toggle-active', isShort);
       showToast(isShort
-        ? '省略読みに切り替えました（せんち・みり）'
-        : '正式読みに切り替えました（せんちめーとる・みりめーとる）', 2000);
+        ? '「せんち・みり」で よむよ。'
+        : '「せんちめーとる・みりめーとる」で よむよ。', 2000);
     });
   }
 
   measureBtn.addEventListener('click', () => {
+    closeAdvancedSettings();
+    if (isFreeMeasureImageMode() && (!state.freePointA || !state.freePointB || state.freeSelectedMm == null)) {
+      showToast('さきに、はかりたい2つの はしを えらんでね。', 2600);
+      speak('はかりたいふたつのはしをえらぼう');
+      return;
+    }
+
     if (!state.snapped) {
       trySnap(false);
     }
     if (!state.snapped) {
-      const msg = state.rulerType === 'plastic'
-        ? '先に物差しの「0」の目盛りを、対象物の左下に合わせてね'
-        : '先に物差しの左はし（0）を、対象物の左下に合わせてね';
+      const msg = isFreeMeasureImageMode()
+        ? (state.rulerType === 'plastic'
+            ? '青い点の下に、ものさしの0を あわせてね。'
+            : '青い点の下に、ものさしの0を あわせてね。')
+        : (state.rulerType === 'plastic'
+            ? 'はかるものの左はしに、0を あわせてね。'
+            : 'はかるものの左はしに、0を あわせてね。');
       showToast(msg, 2200);
-      speak('先に端とゼロを合わせよう');
+      speak('はしとゼロをあわせよう');
       return;
     }
     animateMeasurement();
@@ -2138,10 +4211,17 @@ pointer-events:none;
     soundBtn.setAttribute('aria-label', state.audioEnabled ? '音声オン' : '音声オフ');
   }
 
+  // 音声は初期ON。ただしブラウザの自動再生制限があるため、最初の操作で音声機能を有効化する。
+  window.addEventListener('pointerdown', () => {
+    if (!state.audioEnabled) return;
+    const ctx = audio.ensure();
+    if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+  }, { once:true, capture:true });
+
   soundBtn.addEventListener('click', () => {
     state.audioEnabled = !state.audioEnabled;
     refreshSoundButton();
-    showToast(state.audioEnabled ? '音声をONにしました' : '音声をOFFにしました', 1600);
+    showToast(state.audioEnabled ? 'おとを つけたよ。' : 'おとを けしたよ。', 1600);
     if (state.audioEnabled) {
       const ctx = audio.ensure();
       if (ctx && ctx.state === 'suspended') {
@@ -2157,6 +4237,8 @@ pointer-events:none;
   buildPlasticRulerSvg();
   applyRulerType();
   if (typeof refreshSoundButton === 'function') refreshSoundButton();
+  if (typeof refreshFreeMeasureBtn === 'function') refreshFreeMeasureBtn();
+  if (typeof refreshFreeActionUI === 'function') refreshFreeActionUI();
 
   if (rulerTypeBtn) {
     rulerTypeBtn.addEventListener('click', () => {      state.rulerType = state.rulerType === 'bamboo' ? 'plastic' : 'bamboo';
@@ -2168,9 +4250,9 @@ pointer-events:none;
       clearOverlay();
       updateSurfaceStatus();
       // 定規位置はそのまま（ユーザーが再調整できる）
-      const msg = state.rulerType === 'plastic'
-        ? '📏 プラスチックものさしに切り替えました。0の目盛りを対象物の左下に合わせてね。'
-        : '🎋 竹ものさしに切り替えました。左端の0を対象物の左下に合わせてね。';
+      const msg = isFreeMeasureImageMode()
+        ? 'ものさしを かえたよ。青い点の下に、0を あわせよう。'
+        : 'ものさしを かえたよ。はかるものの左はしに、0を あわせよう。';
       showToast(msg, 2600);
     });
   }
@@ -2184,9 +4266,7 @@ pointer-events:none;
 
   preloadBuiltinPngs().then(count => {
     if (count > 0) {
-      showToast(`✅ PNG ${count}枚を読み込みました。問題ID4〜${maxProblemId()}に追加されました。`, 3000);
     } else {
-      showToast('「次の問題」で問題ID順に進みます。', 2200);
     }
   });
 })();
